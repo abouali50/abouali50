@@ -6,7 +6,7 @@ import { Coins, ArrowRight } from 'lucide-react';
 import { homepage, token } from '../data/mock';
 
 export const TokenSection = () => {
-  const { token, stats } = mockData;
+  const { stats } = homepage;
 
   return (
     <section className="py-24">
