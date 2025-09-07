@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './ui/button';
-import { mockData } from '../mock';
+import { homepage } from '../data/mock';
 
 export const Header = () => {
   return (
