@@ -1,7 +1,7 @@
 import React from 'react';
 import { Separator } from './ui/separator';
 import { MessageCircle, Send, Twitter, Github } from 'lucide-react';
-import { mockData } from '../mock';
+import { homepage } from '../data/mock';
 
 const iconMap = {
   MessageCircle,
