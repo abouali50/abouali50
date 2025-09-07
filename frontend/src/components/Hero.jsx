@@ -4,7 +4,7 @@ import { ArrowRight, ExternalLink } from 'lucide-react';
 import { homepage } from '../data/mock';
 
 export const Hero = () => {
-  const { hero } = mockData;
+  const { hero } = homepage;
 
   return (
     <section className="hero-section">
