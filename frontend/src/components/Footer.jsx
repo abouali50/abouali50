@@ -11,7 +11,7 @@ const iconMap = {
 };
 
 export const Footer = () => {
-  const { footer, community } = mockData;
+  const { footer, community } = homepage;
 
   return (
     <footer className="py-16 border-t border-border-subtle">
