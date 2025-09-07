@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { ArrowRight, ExternalLink } from 'lucide-react';
-import { mockData } from '../mock';
+import { homepage } from '../data/mock';
 
 export const Hero = () => {
   const { hero } = mockData;
