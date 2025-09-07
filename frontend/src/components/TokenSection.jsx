@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Coins, ArrowRight } from 'lucide-react';
-import { mockData } from '../mock';
+import { homepage, token } from '../data/mock';
 
 export const TokenSection = () => {
   const { token, stats } = mockData;
