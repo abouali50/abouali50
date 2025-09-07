@@ -12,7 +12,7 @@ export const Header = () => {
       </div>
       
       <nav className="dark-nav hidden md:flex">
-        {mockData.navigation.slice(0, 4).map((item) => (
+        {homepage.navigation.slice(0, 4).map((item) => (
           <a
             key={item.name}
             href={item.href}
