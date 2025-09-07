@@ -12,7 +12,7 @@ const iconMap = {
 };
 
 export const ValueProps = () => {
-  const { valueProps } = mockData;
+  const { valueProps } = homepage;
 
   return (
     <section className="py-24">
