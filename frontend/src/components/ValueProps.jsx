@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from './ui/card';
 import { Zap, Shield, ArrowUp, Leaf, DollarSign } from 'lucide-react';
-import { mockData } from '../mock';
+import { homepage } from '../data/mock';
 
 const iconMap = {
   Speed: Zap,
