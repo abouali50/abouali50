@@ -1,5 +1,14 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "redirects": [
+    { 
+      "source": "https://www.regamcoin.com/(.*)", 
+      "destination": "https://regamcoin.com/$1", 
+      "permanent": true 
+    }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ],
   "github": {
     "silent": true
   }
