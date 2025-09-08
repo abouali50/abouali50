@@ -16,6 +16,7 @@ export default function AppRoutes() {
       <Route path="/token" element={<Token />} />
       <Route path="/technology" element={<Technology />} />
       <Route path="/developers" element={<Developers />} />
+      <Route path="/roadmap" element={<Roadmap />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/cookies" element={<Cookies />} />
