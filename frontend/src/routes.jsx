@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Token from "./pages/Token";
 import Technology from "./pages/Technology";
 import Developers from "./pages/Developers";
+import Roadmap from "./pages/Roadmap";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
