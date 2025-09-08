@@ -698,7 +698,6 @@ function App() {
           <Route path="/" element={<ExplorerHome />} />
           <Route path="/wallet" element={<WalletComponent />} />
           <Route path="/validators" element={<ValidatorsComponent />} />
-          <Route path="*" element={<ExplorerHome />} />
         </Routes>
       </BrowserRouter>
     </div>
