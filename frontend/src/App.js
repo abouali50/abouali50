@@ -830,7 +830,7 @@ const MembersPage = () => {
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          member.phone.includes(searchQuery);
-    const matchesStatus = !statusFilter || member.status === statusFilter;
+    const matchesStatus = !statusFilter || statusFilter === 'all' || member.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
   
