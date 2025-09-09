@@ -1336,6 +1336,15 @@ async def approve_redemption(
     
     updated_redemption = await db.reward_redemptions.find_one({"id": redemption_id})
     clean_mongo_doc(updated_redemption)
+    
+    # Send notification
+    await notify_redemption_approved(
+        member_id, 
+        redemption["member_name"], 
+        redemption["reward_name"], 
+        points_cost
+    )
+    
     return RewardRedemption(**updated_redemption)
 
 @api_router.put("/redemptions/{redemption_id}/deliver", response_model=RewardRedemption)
