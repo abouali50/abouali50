@@ -296,6 +296,67 @@ class LeaderboardResponse(BaseModel):
     total_entries: int
     generated_at: datetime
 
+# Notifications System Models
+class NotificationEvent(BaseModel):
+    type: str  # "LEVEL_UP", "BADGE_AWARDED", "REDEMPTION_APPROVED", "REDEMPTION_DELIVERED"
+    title: str
+    message: str
+    member_id: str
+    data: Optional[dict] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class GamificationKPI(BaseModel):
+    total_points_distributed: int
+    average_points_per_member: float
+    badges_awarded_this_month: int
+    pending_redemptions: int
+    redemption_approval_rate: float
+    level_distribution: Dict[str, int]
+
+# WebSocket Connection Manager
+class NotificationManager:
+    def __init__(self):
+        # member_id -> set of WebSocket connections
+        self.connections: Dict[str, Set[WebSocket]] = {}
+    
+    async def connect(self, websocket: WebSocket, member_id: str):
+        await websocket.accept()
+        if member_id not in self.connections:
+            self.connections[member_id] = set()
+        self.connections[member_id].add(websocket)
+        print(f"✅ WebSocket connected for member {member_id}")
+    
+    def disconnect(self, websocket: WebSocket, member_id: str):
+        if member_id in self.connections:
+            self.connections[member_id].discard(websocket)
+            if not self.connections[member_id]:
+                del self.connections[member_id]
+        print(f"🔌 WebSocket disconnected for member {member_id}")
+    
+    async def send_to_member(self, member_id: str, event: NotificationEvent):
+        if member_id in self.connections:
+            message = event.json()
+            dead_connections = set()
+            
+            for websocket in self.connections[member_id]:
+                try:
+                    await websocket.send_text(message)
+                    print(f"📬 Sent notification to member {member_id}: {event.type}")
+                except Exception as e:
+                    print(f"❌ Failed to send to {member_id}: {e}")
+                    dead_connections.add(websocket)
+            
+            # Remove dead connections
+            for websocket in dead_connections:
+                self.connections[member_id].discard(websocket)
+    
+    async def broadcast_to_all(self, event: NotificationEvent):
+        for member_id in list(self.connections.keys()):
+            await self.send_to_member(member_id, event)
+
+# Global notification manager
+notification_manager = NotificationManager()
+
 # Helper Functions
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
