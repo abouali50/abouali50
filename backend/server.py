@@ -713,12 +713,6 @@ async def check_level_change_and_notify(member_id: str):
         if (stored_level in levels_order and current_level_name in levels_order and
             levels_order.index(current_level_name) > levels_order.index(stored_level)):
             await notify_level_up(member_id, member["full_name"], stored_level, current_level_name)
-            
-            # Award top 3 badge
-            if rank <= 3:
-                await award_badge_to_member(entry["_id"], "TOP_3_MONTH")
-            
-            rank += 1
 
 async def build_all_time_leaderboard():
     """Build all-time leaderboard"""
