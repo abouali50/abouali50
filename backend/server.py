@@ -447,6 +447,7 @@ async def update_project_type(
     if not project_type:
         raise HTTPException(status_code=404, detail="Project type not found")
     
+    clean_mongo_doc(project_type)
     return ProjectType(**project_type)
 
 # Reports Routes
