@@ -842,7 +842,9 @@ const MembersPage = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showMemberDialog, setShowMemberDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showPointsDialog, setShowPointsDialog] = useState(false);
   const [payments, setPayments] = useState([]);
+  const [pointsHistory, setPointsHistory] = useState([]);
   
   useEffect(() => {
     fetchData();
