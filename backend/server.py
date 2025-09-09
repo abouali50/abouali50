@@ -1005,7 +1005,97 @@ async def initialize_data():
             )
             await db.project_types.insert_one(project_type.dict())
     
-    return {"message": "Default data initialized"}
+    # Create default rewards
+    default_rewards = [
+        {
+            "name": "Carte cadeau 50 MAD", 
+            "category": "Reductions", 
+            "description": "Carte cadeau utilisable dans nos partenaires",
+            "cost_points": 100,
+            "stock": 20,
+            "image_url": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "T-shirt Amicale Anouar", 
+            "category": "Materiel", 
+            "description": "T-shirt officiel avec logo de l'association",
+            "cost_points": 80,
+            "stock": 15,
+            "image_url": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Consultation gratuite", 
+            "category": "Services", 
+            "description": "Consultation gratuite avec nos experts",
+            "cost_points": 150,
+            "stock": 10,
+            "image_url": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Réduction 20% cotisation", 
+            "category": "Reductions", 
+            "description": "Réduction de 20% sur votre prochaine cotisation",
+            "cost_points": 200,
+            "stock": 25,
+            "image_url": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Carnet de notes Amicale", 
+            "category": "Materiel", 
+            "description": "Carnet de notes avec couverture personnalisée",
+            "cost_points": 60,
+            "stock": 30,
+            "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Accès prioritaire événements", 
+            "category": "Privileges", 
+            "description": "Accès prioritaire aux événements de l'association",
+            "cost_points": 120,
+            "stock": 12,
+            "image_url": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Formation gratuite", 
+            "category": "Services", 
+            "description": "Participation gratuite à une formation au choix",
+            "cost_points": 250,
+            "stock": 8,
+            "image_url": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Pack Bienvenue", 
+            "category": "Materiel", 
+            "description": "Pack avec goodies de l'association",
+            "cost_points": 90,
+            "stock": 18,
+            "image_url": "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Invitation VIP", 
+            "category": "Privileges", 
+            "description": "Invitation VIP pour l'assemblée générale annuelle",
+            "cost_points": 180,
+            "stock": 5,
+            "image_url": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=200&h=150&fit=crop"
+        },
+        {
+            "name": "Assistance personnalisée", 
+            "category": "Services", 
+            "description": "Service d'assistance personnalisée pour vos projets",
+            "cost_points": 300,
+            "stock": 6,
+            "image_url": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=200&h=150&fit=crop"
+        }
+    ]
+    
+    for reward_data in default_rewards:
+        existing = await db.rewards.find_one({"name": reward_data["name"]})
+        if not existing:
+            reward = Reward(**reward_data)
+            await db.rewards.insert_one(reward.dict())
+    
+    return {"message": "Default data initialized with rewards catalog"}
 
 # Include router
 app.include_router(api_router)
