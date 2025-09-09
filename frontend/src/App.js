@@ -1044,9 +1044,10 @@ const MemberDetailsDialog = ({ member, payments, open, onOpenChange, onRefresh }
         </DialogHeader>
         
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Informations</TabsTrigger>
             <TabsTrigger value="payments">Paiements</TabsTrigger>
+            <TabsTrigger value="points">Points</TabsTrigger>
           </TabsList>
           
           <TabsContent value="details" className="space-y-4">
