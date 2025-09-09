@@ -1292,6 +1292,18 @@ const MemberDetailsDialog = ({ member, payments, pointsHistory, open, onOpenChan
             )}
           </TabsContent>
           
+          <TabsContent value="level">
+            {memberLevel ? (
+              <MemberLevelCard memberLevel={memberLevel} t={t} />
+            ) : (
+              <p className="text-center text-gray-500 py-8">Chargement du niveau...</p>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="badges">
+            <MemberBadgesCard badges={memberBadges} t={t} />
+          </TabsContent>
+          
           <TabsContent value="payments">
             {payments.length > 0 ? (
               <Table>
