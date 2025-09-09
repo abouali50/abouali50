@@ -115,6 +115,7 @@ const translations = {
     'member.status': 'الحالة',
     'member.join_date': 'تاريخ الانضمام',
     'member.notes': 'ملاحظات',
+    'member.points': 'النقاط',
     'payment.add': 'إضافة دفعة',
     'payment.amount': 'المبلغ',
     'payment.method': 'الطريقة',
