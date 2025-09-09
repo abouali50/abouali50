@@ -643,6 +643,76 @@ async def build_monthly_leaderboard(year: int, month: int):
             )
             
             await db.leaderboards.insert_one(leaderboard_entry.dict())
+
+# Notification Helper Functions
+async def notify_level_up(member_id: str, member_name: str, old_level: str, new_level: str):
+    """Send level up notification"""
+    event = NotificationEvent(
+        type="LEVEL_UP",
+        title="🎉 Niveau supérieur !",
+        message=f"Félicitations {member_name} ! Vous êtes passé au niveau {new_level}",
+        member_id=member_id,
+        data={"old_level": old_level, "new_level": new_level}
+    )
+    await notification_manager.send_to_member(member_id, event)
+
+async def notify_badge_awarded(member_id: str, member_name: str, badge_name: str, badge_description: str):
+    """Send badge awarded notification"""
+    event = NotificationEvent(
+        type="BADGE_AWARDED", 
+        title="🏅 Nouveau badge !",
+        message=f"Vous avez obtenu le badge '{badge_name}' !",
+        member_id=member_id,
+        data={"badge_name": badge_name, "description": badge_description}
+    )
+    await notification_manager.send_to_member(member_id, event)
+
+async def notify_redemption_approved(member_id: str, member_name: str, reward_name: str, points_cost: int):
+    """Send redemption approved notification"""
+    event = NotificationEvent(
+        type="REDEMPTION_APPROVED",
+        title="✅ Échange approuvé !",
+        message=f"Votre échange '{reward_name}' a été approuvé ({points_cost} points)",
+        member_id=member_id,
+        data={"reward_name": reward_name, "points_cost": points_cost}
+    )
+    await notification_manager.send_to_member(member_id, event)
+
+async def notify_redemption_delivered(member_id: str, member_name: str, reward_name: str):
+    """Send redemption delivered notification"""
+    event = NotificationEvent(
+        type="REDEMPTION_DELIVERED",
+        title="🎁 Récompense livrée !",
+        message=f"Votre récompense '{reward_name}' a été livrée !",
+        member_id=member_id,
+        data={"reward_name": reward_name}
+    )
+    await notification_manager.send_to_member(member_id, event)
+
+async def check_level_change_and_notify(member_id: str):
+    """Check if member level changed and send notification"""
+    member = await db.members.find_one({"id": member_id})
+    if not member:
+        return
+    
+    current_member_level = await get_member_level(member_id)
+    current_level_name = current_member_level.current_level.name if current_member_level.current_level else "Bronze"
+    
+    # Check if level is stored and different
+    stored_level = member.get("last_level", "Bronze")
+    
+    if stored_level != current_level_name:
+        # Update stored level
+        await db.members.update_one(
+            {"id": member_id},
+            {"$set": {"last_level": current_level_name}}
+        )
+        
+        # Send notification if it's actually an upgrade
+        levels_order = ["Bronze", "Argent", "Or", "Platine"]
+        if (stored_level in levels_order and current_level_name in levels_order and
+            levels_order.index(current_level_name) > levels_order.index(stored_level)):
+            await notify_level_up(member_id, member["full_name"], stored_level, current_level_name)
             
             # Award top 3 badge
             if rank <= 3:
