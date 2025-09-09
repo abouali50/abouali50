@@ -1150,6 +1150,43 @@ const MemberDetailsDialog = ({ member, payments, open, onOpenChange, onRefresh }
               <p className="text-center text-gray-500 py-8">Aucun paiement enregistré</p>
             )}
           </TabsContent>
+          
+          <TabsContent value="points">
+            {pointsHistory.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Points</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Enregistré par</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pointsHistory.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        {new Date(transaction.date).toLocaleDateString('fr-FR')}
+                      </TableCell>
+                      <TableCell className={`font-semibold ${transaction.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {transaction.points > 0 ? '+' : ''}{transaction.points} pts
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {transaction.transaction_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{transaction.description}</TableCell>
+                      <TableCell>{transaction.recorded_by_name}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucune transaction de points</p>
+            )}
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
