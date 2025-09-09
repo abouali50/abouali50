@@ -906,6 +906,13 @@ class AmicaleAPITester:
         self.test_automatic_points_from_payment()
         self.test_hassan_alami_scenario()
         
+        # Test NEW REWARDS SYSTEM functionality
+        self.test_rewards_catalog()
+        self.test_redemption_workflow()
+        self.test_redemption_rejection_and_refund()
+        self.test_anti_abuse_limits()
+        self.test_redemption_status_filters()
+        
         self.test_reports()
         self.test_member_search_and_filters()
         
