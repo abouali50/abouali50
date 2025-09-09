@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Users, CreditCard, TrendingUp, UserPlus, Settings, Globe, LogOut, Plus, Search, Filter, Eye, Edit, DollarSign, Gift, ShoppingCart, Award, Trophy, Crown, Medal, Star, ChevronRight, Progress } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import { useNotifications } from './hooks/useNotifications';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
