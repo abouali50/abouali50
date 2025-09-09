@@ -193,6 +193,12 @@ async def calculate_balance(member_id: str) -> dict:
     balance = member["total_due"] - total_paid
     return {"amount_paid": total_paid, "balance": balance}
 
+def clean_mongo_doc(doc):
+    """Remove MongoDB ObjectId from document"""
+    if doc and "_id" in doc:
+        del doc["_id"]
+    return doc
+
 # Authentication Routes
 @api_router.post("/auth/login", response_model=Token)
 async def login(user_data: UserLogin):
