@@ -2384,14 +2384,30 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Notification Provider Component
+const NotificationProvider = ({ children }) => {
+  const { isAuthenticated, demoMemberId } = useAuth();
+  const { isConnected } = useNotifications(demoMemberId, isAuthenticated);
+  
+  // Optional: show connection status
+  useEffect(() => {
+    if (isAuthenticated && demoMemberId) {
+      console.log(`🔔 Notifications ${isConnected ? 'connected' : 'disconnected'} for member ${demoMemberId}`);
+    }
+  }, [isConnected, isAuthenticated, demoMemberId]);
+  
+  return children;
+};
+
 // Main App Component
 function App() {
   return (
     <I18nProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <div className="App">
-            <Routes>
+        <NotificationProvider>
+          <BrowserRouter>
+            <div className="App">
+              <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<MemberRegistrationPage />} />
