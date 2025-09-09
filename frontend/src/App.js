@@ -1126,7 +1126,7 @@ const AddPaymentDialog = ({ member, open, onOpenChange, onSuccess }) => {
           
           <div>
             <Label htmlFor="method">Méthode de paiement *</Label>
-            <Select value={formData.method} onValueChange={(value) => setFormData({...formData, method: value})}>
+            <Select value={formData.method || undefined} onValueChange={(value) => setFormData({...formData, method: value})}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
