@@ -1010,6 +1010,8 @@ const MembersPage = () => {
   const [showPointsDialog, setShowPointsDialog] = useState(false);
   const [payments, setPayments] = useState([]);
   const [pointsHistory, setPointsHistory] = useState([]);
+  const [memberLevel, setMemberLevel] = useState(null);
+  const [memberBadges, setMemberBadges] = useState([]);
   
   useEffect(() => {
     fetchData();
