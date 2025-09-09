@@ -864,12 +864,12 @@ const MembersPage = () => {
               />
             </div>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filtrer par statut" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les statuts</SelectItem>
+              <SelectItem value="all">Tous les statuts</SelectItem>
               <SelectItem value="Pending">{t('status.pending')}</SelectItem>
               <SelectItem value="Active">{t('status.active')}</SelectItem>
               <SelectItem value="Inactive">{t('status.inactive')}</SelectItem>
