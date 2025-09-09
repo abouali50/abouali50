@@ -955,6 +955,12 @@ async def add_payment(
             recorded_by_name=current_user.name,
             related_payment_id=payment.id
         )
+        
+        # Check for level change and notify
+        await check_level_change_and_notify(member_id)
+        
+        # Check for badge awards
+        await check_and_award_regular_payer_badge(member_id)
     
     return payment
 
