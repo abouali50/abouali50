@@ -880,6 +880,258 @@ class AmicaleAPITester:
                 status_code = response.status_code if response else "No response"
                 self.log_test(f"Filter redemptions by {status}", False, f"Status: {status_code}")
 
+    def test_levels_system(self):
+        """Test PHASE 2: Levels System"""
+        print("\n🏆 Testing PHASE 2: Levels System...")
+        
+        # Test GET all levels
+        response = self.make_request('GET', 'levels', auth_required=False)
+        if response and response.status_code == 200:
+            levels = response.json()
+            self.log_test("Get all levels", True, f"Found {len(levels)} levels")
+            
+            # Verify the 4 default levels exist
+            expected_levels = [
+                {"name": "Bronze", "min_points": 0},
+                {"name": "Argent", "min_points": 51},
+                {"name": "Or", "min_points": 201},
+                {"name": "Platine", "min_points": 500}
+            ]
+            
+            for expected in expected_levels:
+                found_level = next((l for l in levels if l['name'] == expected['name']), None)
+                if found_level and found_level['min_points'] == expected['min_points']:
+                    self.log_test(f"Verify {expected['name']} level", True, 
+                                 f"Min points: {found_level['min_points']}")
+                else:
+                    self.log_test(f"Verify {expected['name']} level", False, 
+                                 f"Expected {expected['min_points']} min points")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get all levels", False, f"Status: {status}")
+            return
+        
+        # Test member level calculation
+        if self.created_member_id:
+            response = self.make_request('GET', f'members/{self.created_member_id}/level')
+            if response and response.status_code == 200:
+                member_level = response.json()
+                current_level = member_level.get('current_level', {})
+                next_level = member_level.get('next_level')
+                progress = member_level.get('progress_percentage', 0)
+                points_to_next = member_level.get('points_to_next', 0)
+                
+                self.log_test("Get member level info", True, 
+                             f"Current: {current_level.get('name', 'N/A')}, "
+                             f"Progress: {progress}%, Points to next: {points_to_next}")
+            else:
+                status = response.status_code if response else "No response"
+                self.log_test("Get member level info", False, f"Status: {status}")
+
+    def test_badges_system(self):
+        """Test PHASE 2: Badges System"""
+        print("\n🏅 Testing PHASE 2: Badges System...")
+        
+        # Test GET all badges
+        response = self.make_request('GET', 'badges', auth_required=False)
+        if response and response.status_code == 200:
+            badges = response.json()
+            self.log_test("Get all badges", True, f"Found {len(badges)} badges")
+            
+            # Verify the 5 default badges exist
+            expected_badges = [
+                "REGULAR_PAYER", "TOP_3_MONTH", "FIRST_PAYMENT", 
+                "BIG_SPENDER", "EARLY_ADOPTER"
+            ]
+            
+            for expected_code in expected_badges:
+                found_badge = next((b for b in badges if b['code'] == expected_code), None)
+                if found_badge:
+                    self.log_test(f"Verify {expected_code} badge", True, 
+                                 f"Name: {found_badge['name']}")
+                else:
+                    self.log_test(f"Verify {expected_code} badge", False, "Badge not found")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get all badges", False, f"Status: {status}")
+            return
+        
+        # Test member badges
+        if self.created_member_id:
+            response = self.make_request('GET', f'members/{self.created_member_id}/badges')
+            if response and response.status_code == 200:
+                member_badges = response.json()
+                self.log_test("Get member badges", True, f"Member has {len(member_badges)} badges")
+            else:
+                status = response.status_code if response else "No response"
+                self.log_test("Get member badges", False, f"Status: {status}")
+            
+            # Test manual badge awarding (admin only)
+            response = self.make_request('POST', f'members/{self.created_member_id}/badges/EARLY_ADOPTER')
+            if response and response.status_code == 200:
+                result = response.json()
+                self.log_test("Award badge manually", True, f"Message: {result.get('message', 'Success')}")
+            else:
+                status = response.status_code if response else "No response"
+                # It's OK if badge already exists (400 error)
+                if response and response.status_code == 400:
+                    self.log_test("Award badge manually", True, "Badge already awarded (expected)")
+                else:
+                    self.log_test("Award badge manually", False, f"Status: {status}")
+
+    def test_leaderboard_system(self):
+        """Test PHASE 2: Leaderboard System"""
+        print("\n🏆 Testing PHASE 2: Leaderboard System...")
+        
+        # Test generate all-time leaderboard
+        response = self.make_request('POST', 'leaderboard/generate/all-time')
+        if response and response.status_code == 200:
+            result = response.json()
+            self.log_test("Generate all-time leaderboard", True, f"Message: {result.get('message', 'Success')}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Generate all-time leaderboard", False, f"Status: {status}")
+        
+        # Test generate monthly leaderboard (current month)
+        current_date = datetime.now()
+        response = self.make_request('POST', f'leaderboard/generate/{current_date.year}/{current_date.month}')
+        if response and response.status_code == 200:
+            result = response.json()
+            self.log_test("Generate monthly leaderboard", True, f"Message: {result.get('message', 'Success')}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Generate monthly leaderboard", False, f"Status: {status}")
+        
+        # Test GET all-time leaderboard
+        response = self.make_request('GET', 'leaderboard?period=all_time', auth_required=False)
+        if response and response.status_code == 200:
+            leaderboard = response.json()
+            entries = leaderboard.get('entries', [])
+            total_entries = leaderboard.get('total_entries', 0)
+            self.log_test("Get all-time leaderboard", True, 
+                         f"Found {len(entries)} entries, Total: {total_entries}")
+            
+            # Verify leaderboard structure
+            if entries:
+                first_entry = entries[0]
+                required_fields = ['rank', 'member_name', 'points', 'level_name', 'badge_count']
+                has_all_fields = all(field in first_entry for field in required_fields)
+                
+                if has_all_fields:
+                    self.log_test("Verify leaderboard structure", True, 
+                                 f"Top member: {first_entry['member_name']} "
+                                 f"({first_entry['points']} pts, {first_entry['level_name']} level)")
+                else:
+                    missing_fields = [f for f in required_fields if f not in first_entry]
+                    self.log_test("Verify leaderboard structure", False, 
+                                 f"Missing fields: {missing_fields}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get all-time leaderboard", False, f"Status: {status}")
+        
+        # Test GET monthly leaderboard
+        period = f"monthly:{current_date.year}-{current_date.month:02d}"
+        response = self.make_request('GET', f'leaderboard?period={period}', auth_required=False)
+        if response and response.status_code == 200:
+            monthly_leaderboard = response.json()
+            monthly_entries = monthly_leaderboard.get('entries', [])
+            self.log_test("Get monthly leaderboard", True, 
+                         f"Found {len(monthly_entries)} monthly entries")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get monthly leaderboard", False, f"Status: {status}")
+
+    def test_daily_jobs(self):
+        """Test PHASE 2: Daily Jobs System"""
+        print("\n🔄 Testing PHASE 2: Daily Jobs...")
+        
+        response = self.make_request('POST', 'jobs/daily')
+        if response and response.status_code == 200:
+            result = response.json()
+            members_checked = result.get('members_checked', 0)
+            badges_processed = result.get('badges_processed', 0)
+            self.log_test("Run daily jobs", True, 
+                         f"Members checked: {members_checked}, Badges processed: {badges_processed}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Run daily jobs", False, f"Status: {status}")
+
+    def test_specific_member_scenarios(self):
+        """Test specific member scenarios mentioned in requirements"""
+        print("\n👤 Testing Specific Member Scenarios...")
+        
+        # Test Member 191344: 940 pts → Should be PLATINE level
+        response = self.make_request('GET', 'members?query=191344')
+        if response and response.status_code == 200:
+            members = response.json()
+            member_191344 = next((m for m in members if '191344' in m['full_name']), None)
+            
+            if member_191344:
+                self.log_test("Find Member 191344", True, f"Found: {member_191344['full_name']}")
+                
+                # Check level
+                response = self.make_request('GET', f'members/{member_191344["id"]}/level')
+                if response and response.status_code == 200:
+                    level_info = response.json()
+                    current_level = level_info.get('current_level', {}).get('name', 'Unknown')
+                    
+                    if current_level == 'Platine':
+                        self.log_test("Member 191344 level verification", True, 
+                                     f"Level: {current_level} (expected Platine)")
+                    else:
+                        self.log_test("Member 191344 level verification", False, 
+                                     f"Level: {current_level}, expected Platine")
+            else:
+                self.log_test("Find Member 191344", False, "Member not found")
+        
+        # Test Hassan Alami: 25 pts → Should be BRONZE level
+        response = self.make_request('GET', 'members?query=Hassan')
+        if response and response.status_code == 200:
+            members = response.json()
+            hassan_member = next((m for m in members if 'Hassan' in m['full_name'] and 'Alami' in m['full_name']), None)
+            
+            if hassan_member:
+                self.log_test("Find Hassan Alami", True, f"Found: {hassan_member['full_name']}")
+                
+                # Check level
+                response = self.make_request('GET', f'members/{hassan_member["id"]}/level')
+                if response and response.status_code == 200:
+                    level_info = response.json()
+                    current_level = level_info.get('current_level', {}).get('name', 'Unknown')
+                    
+                    if current_level == 'Bronze':
+                        self.log_test("Hassan Alami level verification", True, 
+                                     f"Level: {current_level} (expected Bronze)")
+                    else:
+                        self.log_test("Hassan Alami level verification", False, 
+                                     f"Level: {current_level}, expected Bronze")
+            else:
+                self.log_test("Find Hassan Alami", False, "Hassan Alami not found")
+        
+        # Test Member 185329: 90 pts → Should be ARGENT level
+        response = self.make_request('GET', 'members?query=185329')
+        if response and response.status_code == 200:
+            members = response.json()
+            member_185329 = next((m for m in members if '185329' in m['full_name']), None)
+            
+            if member_185329:
+                self.log_test("Find Member 185329", True, f"Found: {member_185329['full_name']}")
+                
+                # Check level
+                response = self.make_request('GET', f'members/{member_185329["id"]}/level')
+                if response and response.status_code == 200:
+                    level_info = response.json()
+                    current_level = level_info.get('current_level', {}).get('name', 'Unknown')
+                    
+                    if current_level == 'Argent':
+                        self.log_test("Member 185329 level verification", True, 
+                                     f"Level: {current_level} (expected Argent)")
+                    else:
+                        self.log_test("Member 185329 level verification", False, 
+                                     f"Level: {current_level}, expected Argent")
+            else:
+                self.log_test("Find Member 185329", False, "Member not found")
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Amicale Anouar Backend API Tests")
