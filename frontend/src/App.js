@@ -828,6 +828,9 @@ const AdminLayout = ({ children }) => {
                 <Link to="/leaderboard" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
                   {t('leaderboard.title')}
                 </Link>
+                <Link to="/monitor" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                  Monitoring
+                </Link>
                 <Link to="/reports" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
                   {t('nav.reports')}
                 </Link>
