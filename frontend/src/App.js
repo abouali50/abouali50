@@ -793,6 +793,7 @@ const DashboardPage = () => {
                     <TableHead>{t('member.project_type')}</TableHead>
                     <TableHead>{t('member.status')}</TableHead>
                     <TableHead>{t('member.balance')}</TableHead>
+                    <TableHead>{t('member.points')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
