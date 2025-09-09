@@ -1489,6 +1489,446 @@ const AddPaymentDialog = ({ member, open, onOpenChange, onSuccess }) => {
   );
 };
 
+// Rewards Catalog Page
+const RewardsPage = () => {
+  const { t } = useI18n();
+  const [rewards, setRewards] = useState([]);
+  const [redemptions, setRedemptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedReward, setSelectedReward] = useState(null);
+  const [showRedemptionDialog, setShowRedemptionDialog] = useState(false);
+  const [showRedemptionsHistory, setShowRedemptionsHistory] = useState(false);
+  
+  useEffect(() => {
+    fetchData();
+  }, []);
+  
+  const fetchData = async () => {
+    try {
+      const [rewardsResponse, redemptionsResponse] = await Promise.all([
+        axios.get(`${API}/rewards?active=true`),
+        axios.get(`${API}/redemptions`)
+      ]);
+      
+      setRewards(rewardsResponse.data);
+      setRedemptions(redemptionsResponse.data);
+    } catch (error) {
+      console.error('Error fetching rewards data:', error);
+      toast.error(t('error.occurred'));
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleRedeemReward = (reward) => {
+    setSelectedReward(reward);
+    setShowRedemptionDialog(true);
+  };
+  
+  const filteredRewards = rewards.filter(reward => {
+    if (!selectedCategory) return true;
+    return reward.category === selectedCategory;
+  });
+  
+  const categories = [
+    { value: '', label: 'Toutes' },
+    { value: 'Materiel', label: t('rewards.category.materiel') },
+    { value: 'Services', label: t('rewards.category.services') },
+    { value: 'Reductions', label: t('rewards.category.reductions') },
+    { value: 'Privileges', label: t('rewards.category.privileges') }
+  ];
+  
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-12">Chargement...</div>
+      </AdminLayout>
+    );
+  }
+  
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">{t('rewards.catalog')}</h2>
+            <p className="text-gray-600">Échangez vos points contre des récompenses</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowRedemptionsHistory(true)}
+            className="flex items-center gap-2"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            {t('redemptions.history')}
+          </Button>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrer par catégorie" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredRewards.map((reward) => (
+            <RewardCard 
+              key={reward.id} 
+              reward={reward} 
+              onRedeem={handleRedeemReward}
+              t={t}
+            />
+          ))}
+        </div>
+        
+        {filteredRewards.length === 0 && (
+          <div className="text-center py-12">
+            <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Aucune récompense disponible pour cette catégorie</p>
+          </div>
+        )}
+        
+        {/* Redemption Request Dialog */}
+        <RedemptionRequestDialog
+          reward={selectedReward}
+          open={showRedemptionDialog}
+          onOpenChange={setShowRedemptionDialog}
+          onSuccess={() => {
+            fetchData();
+            setShowRedemptionDialog(false);
+          }}
+        />
+        
+        {/* Redemptions History Dialog */}
+        <RedemptionsHistoryDialog
+          redemptions={redemptions}
+          open={showRedemptionsHistory}
+          onOpenChange={setShowRedemptionsHistory}
+          onRefresh={fetchData}
+        />
+      </div>
+    </AdminLayout>
+  );
+};
+
+// Reward Card Component
+const RewardCard = ({ reward, onRedeem, t }) => {
+  const isOutOfStock = reward.stock <= 0;
+  const isLowStock = reward.stock <= 5 && reward.stock > 0;
+  
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+      <div className="aspect-video relative">
+        {reward.image_url ? (
+          <img 
+            src={reward.image_url} 
+            alt={reward.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+            <Gift className="h-12 w-12 text-emerald-600" />
+          </div>
+        )}
+        
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <Badge variant="destructive">{t('rewards.out_of_stock')}</Badge>
+          </div>
+        )}
+        
+        {isLowStock && (
+          <div className="absolute top-2 right-2">
+            <Badge variant="outline" className="bg-orange-100 text-orange-800">
+              {t('rewards.low_stock')}
+            </Badge>
+          </div>
+        )}
+      </div>
+      
+      <CardContent className="p-4">
+        <div className="space-y-2">
+          <div className="flex items-start justify-between">
+            <h3 className="font-semibold text-lg line-clamp-2">{reward.name}</h3>
+            <Badge variant="outline" className="ml-2 shrink-0">
+              {t(`rewards.category.${reward.category.toLowerCase()}`)}
+            </Badge>
+          </div>
+          
+          {reward.description && (
+            <p className="text-sm text-gray-600 line-clamp-2">{reward.description}</p>
+          )}
+          
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-1">
+              <Award className="h-4 w-4 text-emerald-600" />
+              <span className="font-bold text-emerald-600">{reward.cost_points} pts</span>
+            </div>
+            <span className="text-sm text-gray-500">Stock: {reward.stock}</span>
+          </div>
+          
+          <Button 
+            onClick={() => onRedeem(reward)}
+            disabled={isOutOfStock}
+            className="w-full mt-3"
+            variant={isOutOfStock ? "outline" : "default"}
+          >
+            <Gift className="h-4 w-4 mr-2" />
+            {isOutOfStock ? t('rewards.out_of_stock') : t('rewards.redeem')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Redemption Request Dialog
+const RedemptionRequestDialog = ({ reward, open, onOpenChange, onSuccess }) => {
+  const { t } = useI18n();
+  const [note, setNote] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!reward) return;
+    
+    setLoading(true);
+    
+    try {
+      // For demo, we'll use the first member (in real app, this would be current user's member profile)
+      const membersResponse = await axios.get(`${API}/members`);
+      const members = membersResponse.data;
+      
+      if (members.length === 0) {
+        toast.error('Aucun membre trouvé');
+        return;
+      }
+      
+      const firstMember = members[0]; // Demo: use first member
+      
+      await axios.post(`${API}/members/${firstMember.id}/redemptions`, {
+        reward_id: reward.id,
+        note: note
+      });
+      
+      toast.success(t('success.redemption_requested'));
+      setNote('');
+      onSuccess();
+    } catch (error) {
+      console.error('Redemption request error:', error);
+      if (error.response?.data?.detail?.includes('points')) {
+        toast.error(t('error.insufficient_points'));
+      } else if (error.response?.data?.detail?.includes('stock')) {
+        toast.error(t('error.out_of_stock'));
+      } else {
+        toast.error(t('error.occurred'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (!reward) return null;
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('redemptions.request')}</DialogTitle>
+          <p className="text-sm text-gray-600">
+            {reward.name} - {reward.cost_points} points
+          </p>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+            {reward.image_url ? (
+              <img 
+                src={reward.image_url} 
+                alt={reward.name}
+                className="w-16 h-16 object-cover rounded"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-emerald-100 rounded flex items-center justify-center">
+                <Gift className="h-8 w-8 text-emerald-600" />
+              </div>
+            )}
+            <div className="flex-1">
+              <h3 className="font-semibold">{reward.name}</h3>
+              <p className="text-sm text-gray-600">{reward.description}</p>
+              <div className="flex items-center gap-4 mt-1">
+                <span className="text-emerald-600 font-semibold">{reward.cost_points} pts</span>
+                <span className="text-sm text-gray-500">Stock: {reward.stock}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="note">{t('redemptions.note')}</Label>
+            <Textarea
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Ajoutez une note pour votre demande..."
+              rows={3}
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {t('action.cancel')}
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Demande...' : t('redemptions.request')}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Redemptions History Dialog
+const RedemptionsHistoryDialog = ({ redemptions, open, onOpenChange, onRefresh }) => {
+  const { t } = useI18n();
+  
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Pending': return 'bg-yellow-100 text-yellow-800';
+      case 'Approved': return 'bg-blue-100 text-blue-800';
+      case 'Delivered': return 'bg-green-100 text-green-800';
+      case 'Rejected': return 'bg-red-100 text-red-800';
+      case 'Canceled': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+  
+  const handleApprove = async (redemptionId) => {
+    try {
+      await axios.put(`${API}/redemptions/${redemptionId}/approve`, {});
+      toast.success(t('success.redemption_approved'));
+      onRefresh();
+    } catch (error) {
+      console.error('Approve error:', error);
+      toast.error(t('error.occurred'));
+    }
+  };
+  
+  const handleDeliver = async (redemptionId) => {
+    try {
+      await axios.put(`${API}/redemptions/${redemptionId}/deliver`, {});
+      toast.success(t('success.redemption_delivered'));
+      onRefresh();
+    } catch (error) {
+      console.error('Deliver error:', error);
+      toast.error(t('error.occurred'));
+    }
+  };
+  
+  const handleReject = async (redemptionId) => {
+    try {
+      await axios.put(`${API}/redemptions/${redemptionId}/reject`, {
+        note: "Rejeté par l'administrateur"
+      });
+      toast.success(t('success.redemption_rejected'));
+      onRefresh();
+    } catch (error) {
+      console.error('Reject error:', error);
+      toast.error(t('error.occurred'));
+    }
+  };
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{t('redemptions.history')}</DialogTitle>
+        </DialogHeader>
+        
+        {redemptions.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('redemptions.date')}</TableHead>
+                <TableHead>Membre</TableHead>
+                <TableHead>Récompense</TableHead>
+                <TableHead>Points</TableHead>
+                <TableHead>{t('redemptions.status')}</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {redemptions.map((redemption) => (
+                <TableRow key={redemption.id}>
+                  <TableCell>
+                    {new Date(redemption.created_at).toLocaleDateString('fr-FR')}
+                  </TableCell>
+                  <TableCell className="font-medium">{redemption.member_name}</TableCell>
+                  <TableCell>{redemption.reward_name}</TableCell>
+                  <TableCell className="font-semibold text-emerald-600">
+                    {redemption.points_cost} pts
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(redemption.status)}>
+                      {t(`redemptions.status.${redemption.status.toLowerCase()}`)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-1">
+                      {redemption.status === 'Pending' && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleApprove(redemption.id)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Approuver
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => handleReject(redemption.id)}
+                          >
+                            Rejeter
+                          </Button>
+                        </>
+                      )}
+                      {redemption.status === 'Approved' && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleDeliver(redemption.id)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Livrer
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-8">
+            <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Aucun échange enregistré</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
