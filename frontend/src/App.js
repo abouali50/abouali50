@@ -1036,7 +1036,7 @@ const MembersPage = () => {
 };
 
 // Member Details Dialog Component
-const MemberDetailsDialog = ({ member, payments, open, onOpenChange, onRefresh }) => {
+const MemberDetailsDialog = ({ member, payments, pointsHistory, open, onOpenChange, onRefresh }) => {
   const { t } = useI18n();
   
   if (!member) return null;
