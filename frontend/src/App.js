@@ -499,7 +499,7 @@ const MemberRegistrationPage = () => {
               
               <div>
                 <Label htmlFor="sex">{t('member.sex')} *</Label>
-                <Select value={formData.sex} onValueChange={(value) => setFormData({...formData, sex: value})}>
+                <Select value={formData.sex || undefined} onValueChange={(value) => setFormData({...formData, sex: value})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez" />
                   </SelectTrigger>
