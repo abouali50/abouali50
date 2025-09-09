@@ -311,8 +311,9 @@ async def get_members(
     
     members = await db.members.find(filter_query).to_list(None)
     
-    # Update balances
+    # Update balances and clean docs
     for member in members:
+        clean_mongo_doc(member)
         balance_info = await calculate_balance(member["id"])
         member.update(balance_info)
     
