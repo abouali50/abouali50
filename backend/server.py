@@ -142,12 +142,30 @@ class Token(BaseModel):
     token_type: str = "bearer"
     user: dict
 
+class PointTransaction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    member_id: str
+    points: int
+    transaction_type: str  # "payment", "manual", "bonus", "deduction"
+    description: str
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    recorded_by: str
+    recorded_by_name: str
+    related_payment_id: Optional[str] = None
+
+class PointTransactionCreate(BaseModel):
+    points: int
+    transaction_type: str = "manual"
+    description: str
+
 class ReportsSummary(BaseModel):
     total_members: int
     total_collected: float
     total_outstanding: float
     active_members: int
     pending_members: int
+    total_points_distributed: int
+    average_points_per_member: float
 
 # Helper Functions
 def hash_password(password: str) -> str:
