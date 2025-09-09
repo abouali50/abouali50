@@ -1527,7 +1527,7 @@ const RewardsPage = () => {
   };
   
   const filteredRewards = rewards.filter(reward => {
-    if (!selectedCategory) return true;
+    if (!selectedCategory || selectedCategory === 'ALL') return true;
     return reward.category === selectedCategory;
   });
   
