@@ -1374,6 +1374,14 @@ async def deliver_redemption(
     
     updated_redemption = await db.reward_redemptions.find_one({"id": redemption_id})
     clean_mongo_doc(updated_redemption)
+    
+    # Send notification
+    await notify_redemption_delivered(
+        redemption["member_id"], 
+        redemption["member_name"], 
+        redemption["reward_name"]
+    )
+    
     return RewardRedemption(**updated_redemption)
 
 @api_router.put("/redemptions/{redemption_id}/reject", response_model=RewardRedemption)
