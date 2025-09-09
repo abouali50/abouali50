@@ -410,6 +410,8 @@ async def get_all_payments(
 @api_router.get("/project-types", response_model=List[ProjectType])
 async def get_project_types():
     project_types = await db.project_types.find({"active": True}).to_list(None)
+    for pt in project_types:
+        clean_mongo_doc(pt)
     return [ProjectType(**pt) for pt in project_types]
 
 @api_router.post("/project-types", response_model=ProjectType)
