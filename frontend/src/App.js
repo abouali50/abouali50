@@ -1971,6 +1971,12 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              <Route path="/rewards" element={
+                <ProtectedRoute>
+                  <RewardsPage />
+                </ProtectedRoute>
+              } />
+              
               <Route path="/reports" element={
                 <ProtectedRoute>
                   <DashboardPage />
