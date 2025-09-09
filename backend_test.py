@@ -239,18 +239,206 @@ class AmicaleAPITester:
             status = response.status_code if response else "No response"
             self.log_test("Get all payments", False, f"Status: {status}")
 
+    def test_points_system(self):
+        """Test points system endpoints - NEW POINTS FUNCTIONALITY"""
+        print("\n⭐ Testing Points System...")
+        
+        if not self.created_member_id:
+            self.log_test("Points tests", False, "No member ID available")
+            return
+        
+        # Test GET member points history (should be empty initially)
+        response = self.make_request('GET', f'members/{self.created_member_id}/points')
+        if response and response.status_code == 200:
+            points_history = response.json()
+            self.log_test("Get member points history", True, f"Found {len(points_history)} point transactions")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get member points history", False, f"Status: {status}")
+        
+        # Test ADD manual points
+        manual_points_data = {
+            "points": 50,
+            "transaction_type": "manual",
+            "description": "Test manual points attribution via API"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/points', manual_points_data)
+        if response and response.status_code == 200:
+            points_transaction = response.json()
+            self.log_test("Add manual points", True, f"Added {points_transaction['points']} points")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Add manual points", False, f"Status: {status}")
+        
+        # Test ADD negative points (deduction)
+        deduction_points_data = {
+            "points": -10,
+            "transaction_type": "deduction",
+            "description": "Test points deduction via API"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/points', deduction_points_data)
+        if response and response.status_code == 200:
+            points_transaction = response.json()
+            self.log_test("Add points deduction", True, f"Deducted {abs(points_transaction['points'])} points")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Add points deduction", False, f"Status: {status}")
+        
+        # Test GET points leaderboard
+        response = self.make_request('GET', 'points/leaderboard?limit=5')
+        if response and response.status_code == 200:
+            leaderboard = response.json()
+            self.log_test("Get points leaderboard", True, f"Found {len(leaderboard)} members in leaderboard")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get points leaderboard", False, f"Status: {status}")
+        
+        # Verify member now has points
+        response = self.make_request('GET', f'members/{self.created_member_id}')
+        if response and response.status_code == 200:
+            member = response.json()
+            member_points = member.get('points', 0)
+            self.log_test("Verify member points updated", True, f"Member has {member_points} total points")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Verify member points updated", False, f"Status: {status}")
+
+    def test_automatic_points_from_payment(self):
+        """Test automatic points generation from payments"""
+        print("\n💰⭐ Testing Automatic Points from Payments...")
+        
+        if not self.created_member_id:
+            self.log_test("Automatic points tests", False, "No member ID available")
+            return
+        
+        # Get member points before payment
+        response = self.make_request('GET', f'members/{self.created_member_id}')
+        points_before = 0
+        if response and response.status_code == 200:
+            member = response.json()
+            points_before = member.get('points', 0)
+            print(f"   Points before payment: {points_before}")
+        
+        # Add a payment that should generate points (150 MAD = 15 points)
+        payment_data = {
+            "amount": 150.0,
+            "method": "Cash",
+            "note": "Test payment for automatic points generation"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/payments', payment_data)
+        if response and response.status_code == 200:
+            payment = response.json()
+            expected_points = int(150 // 10)  # 1 point per 10 MAD
+            self.log_test("Add payment for points", True, f"Payment: {payment['amount']} MAD, Expected points: {expected_points}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Add payment for points", False, f"Status: {status}")
+            return
+        
+        # Verify points were automatically added
+        response = self.make_request('GET', f'members/{self.created_member_id}')
+        if response and response.status_code == 200:
+            member = response.json()
+            points_after = member.get('points', 0)
+            points_gained = points_after - points_before
+            expected_points = int(150 // 10)  # 15 points for 150 MAD
+            
+            if points_gained == expected_points:
+                self.log_test("Automatic points generation", True, 
+                             f"Points before: {points_before}, after: {points_after}, gained: {points_gained}")
+            else:
+                self.log_test("Automatic points generation", False, 
+                             f"Expected {expected_points} points, got {points_gained}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Automatic points generation", False, f"Status: {status}")
+        
+        # Verify points transaction was created for the payment
+        response = self.make_request('GET', f'members/{self.created_member_id}/points')
+        if response and response.status_code == 200:
+            points_history = response.json()
+            payment_transactions = [t for t in points_history if t['transaction_type'] == 'payment']
+            if len(payment_transactions) > 0:
+                latest_payment_transaction = payment_transactions[0]  # Should be most recent
+                self.log_test("Payment points transaction created", True, 
+                             f"Transaction: {latest_payment_transaction['points']} pts, Type: {latest_payment_transaction['transaction_type']}")
+            else:
+                self.log_test("Payment points transaction created", False, "No payment-type transactions found")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Payment points transaction created", False, f"Status: {status}")
+
     def test_reports(self):
-        """Test reports endpoints"""
-        print("\n📊 Testing Reports...")
+        """Test reports endpoints with enhanced points data"""
+        print("\n📊 Testing Enhanced Reports with Points...")
         
         response = self.make_request('GET', 'reports/summary')
         if response and response.status_code == 200:
             reports = response.json()
-            self.log_test("Get reports summary", True, 
-                         f"Members: {reports['total_members']}, Collected: {reports['total_collected']} MAD")
+            
+            # Check if points fields are present
+            has_points_fields = 'total_points_distributed' in reports and 'average_points_per_member' in reports
+            
+            if has_points_fields:
+                self.log_test("Enhanced reports with points", True, 
+                             f"Members: {reports['total_members']}, Collected: {reports['total_collected']} MAD, "
+                             f"Points distributed: {reports['total_points_distributed']}, "
+                             f"Avg points: {reports['average_points_per_member']}")
+            else:
+                self.log_test("Enhanced reports with points", False, "Missing points fields in reports")
         else:
             status = response.status_code if response else "No response"
-            self.log_test("Get reports summary", False, f"Status: {status}")
+            self.log_test("Enhanced reports with points", False, f"Status: {status}")
+
+    def test_hassan_alami_scenario(self):
+        """Test the specific Hassan Alami scenario mentioned in requirements"""
+        print("\n👤 Testing Hassan Alami Scenario...")
+        
+        # Look for Hassan Alami in existing members
+        response = self.make_request('GET', 'members?query=Hassan')
+        hassan_member = None
+        
+        if response and response.status_code == 200:
+            members = response.json()
+            hassan_members = [m for m in members if 'Hassan' in m['full_name'] and 'Alami' in m['full_name']]
+            
+            if hassan_members:
+                hassan_member = hassan_members[0]
+                self.log_test("Find Hassan Alami", True, f"Found: {hassan_member['full_name']}")
+                
+                # Check if Hassan has 15 points from 150 MAD payment
+                expected_points = 15
+                actual_points = hassan_member.get('points', 0)
+                
+                if actual_points == expected_points:
+                    self.log_test("Hassan Alami points verification", True, 
+                                 f"Hassan has {actual_points} points (expected {expected_points})")
+                else:
+                    self.log_test("Hassan Alami points verification", False, 
+                                 f"Hassan has {actual_points} points, expected {expected_points}")
+                
+                # Check Hassan's payment history
+                response = self.make_request('GET', f'members/{hassan_member["id"]}/payments')
+                if response and response.status_code == 200:
+                    payments = response.json()
+                    total_paid = sum(p['amount'] for p in payments)
+                    self.log_test("Hassan Alami payment history", True, 
+                                 f"Total payments: {len(payments)}, Total amount: {total_paid} MAD")
+                
+                # Check Hassan's points history
+                response = self.make_request('GET', f'members/{hassan_member["id"]}/points')
+                if response and response.status_code == 200:
+                    points_history = response.json()
+                    self.log_test("Hassan Alami points history", True, 
+                                 f"Points transactions: {len(points_history)}")
+            else:
+                self.log_test("Find Hassan Alami", False, "Hassan Alami not found in members")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Find Hassan Alami", False, f"Status: {status}")
 
     def test_member_search_and_filters(self):
         """Test member search and filtering"""
