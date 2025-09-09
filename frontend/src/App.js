@@ -1495,7 +1495,7 @@ const RewardsPage = () => {
   const [rewards, setRewards] = useState([]);
   const [redemptions, setRedemptions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedReward, setSelectedReward] = useState(null);
   const [showRedemptionDialog, setShowRedemptionDialog] = useState(false);
   const [showRedemptionsHistory, setShowRedemptionsHistory] = useState(false);
