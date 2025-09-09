@@ -314,6 +314,24 @@ async def add_points_transaction(member_id: str, points: int, transaction_type: 
             {"$set": {"points": max(0, new_points)}}  # Ensure points don't go negative
         )
 
+async def get_member_points_balance(member_id: str) -> int:
+    """Get current points balance for a member"""
+    member = await db.members.find_one({"id": member_id})
+    return member.get("points", 0) if member else 0
+
+async def can_member_redeem(member_id: str, points_cost: int) -> bool:
+    """Check if member has enough points to redeem"""
+    balance = await get_member_points_balance(member_id)
+    return balance >= points_cost
+
+async def count_pending_redemptions(member_id: str) -> int:
+    """Count pending redemptions for a member (anti-abuse)"""
+    count = await db.reward_redemptions.count_documents({
+        "member_id": member_id,
+        "status": RedemptionStatus.PENDING
+    })
+    return count
+
 # Authentication Routes
 @api_router.post("/auth/login", response_model=Token)
 async def login(user_data: UserLogin):
