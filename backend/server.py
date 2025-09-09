@@ -510,6 +510,59 @@ async def update_project_type(
     clean_mongo_doc(project_type)
     return ProjectType(**project_type)
 
+# Points Routes
+@api_router.post("/members/{member_id}/points", response_model=PointTransaction)
+async def add_points_to_member(
+    member_id: str,
+    points_data: PointTransactionCreate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    member = await db.members.find_one({"id": member_id})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    await add_points_transaction(
+        member_id=member_id,
+        points=points_data.points,
+        transaction_type=points_data.transaction_type,
+        description=points_data.description,
+        recorded_by=current_user.id,
+        recorded_by_name=current_user.name
+    )
+    
+    # Return the transaction
+    transaction = PointTransaction(
+        member_id=member_id,
+        points=points_data.points,
+        transaction_type=points_data.transaction_type,
+        description=points_data.description,
+        recorded_by=current_user.id,
+        recorded_by_name=current_user.name
+    )
+    
+    return transaction
+
+@api_router.get("/members/{member_id}/points", response_model=List[PointTransaction])
+async def get_member_points_history(
+    member_id: str,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    transactions = await db.point_transactions.find({"member_id": member_id}).sort("date", -1).to_list(None)
+    for transaction in transactions:
+        clean_mongo_doc(transaction)
+    return [PointTransaction(**transaction) for transaction in transactions]
+
+@api_router.get("/points/leaderboard")
+async def get_points_leaderboard(
+    limit: int = 10,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Get top members by points"""
+    members = await db.members.find().sort("points", -1).limit(limit).to_list(None)
+    for member in members:
+        clean_mongo_doc(member)
+    return [Member(**member) for member in members]
+
 # Reports Routes
 @api_router.get("/reports/summary", response_model=ReportsSummary)
 async def get_reports_summary(
@@ -525,6 +578,7 @@ async def get_reports_summary(
     
     total_collected = 0.0
     total_outstanding = 0.0
+    total_points = 0
     
     for member in all_members:
         clean_mongo_doc(member)
@@ -532,13 +586,18 @@ async def get_reports_summary(
         total_collected += balance_info["amount_paid"]
         if balance_info["balance"] > 0:
             total_outstanding += balance_info["balance"]
+        total_points += member.get("points", 0)
+    
+    average_points = total_points / total_members if total_members > 0 else 0
     
     return ReportsSummary(
         total_members=total_members,
         total_collected=total_collected,
         total_outstanding=total_outstanding,
         active_members=active_members,
-        pending_members=pending_members
+        pending_members=pending_members,
+        total_points_distributed=total_points,
+        average_points_per_member=round(average_points, 1)
     )
 
 # Initialize default data
