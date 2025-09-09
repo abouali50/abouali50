@@ -81,6 +81,7 @@ class Member(BaseModel):
     total_due: float = 0.0
     amount_paid: float = 0.0
     balance: float = 0.0
+    points: int = 0
     status: MemberStatus = MemberStatus.PENDING
     join_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     notes: Optional[str] = None
