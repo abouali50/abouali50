@@ -1263,6 +1263,169 @@ async def reject_redemption(
     clean_mongo_doc(updated_redemption)
     return RewardRedemption(**updated_redemption)
 
+# Levels & Badges Routes
+@api_router.get("/levels", response_model=List[Level])
+async def get_levels():
+    """Get all levels"""
+    levels = await db.levels.find().sort("min_points", 1).to_list(None)
+    for level in levels:
+        clean_mongo_doc(level)
+    return [Level(**level) for level in levels]
+
+@api_router.post("/levels", response_model=Level)
+async def create_level(
+    level_data: LevelCreate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Create a new level (admin only)"""
+    level = Level(**level_data.dict())
+    await db.levels.insert_one(level.dict())
+    return level
+
+@api_router.get("/badges", response_model=List[Badge])
+async def get_badges():
+    """Get all badges"""
+    badges = await db.badges.find().sort("created_at", -1).to_list(None)
+    for badge in badges:
+        clean_mongo_doc(badge)
+    return [Badge(**badge) for badge in badges]
+
+@api_router.post("/badges", response_model=Badge)
+async def create_badge(
+    badge_data: BadgeCreate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Create a new badge (admin only)"""
+    # Check if badge code already exists
+    existing = await db.badges.find_one({"code": badge_data.code})
+    if existing:
+        raise HTTPException(status_code=400, detail="Badge code already exists")
+    
+    badge = Badge(**badge_data.dict())
+    await db.badges.insert_one(badge.dict())
+    return badge
+
+@api_router.get("/members/{member_id}/level", response_model=MemberLevel)
+async def get_member_level_info(
+    member_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get member's level information"""
+    member = await db.members.find_one({"id": member_id})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    return await get_member_level(member_id)
+
+@api_router.get("/members/{member_id}/badges", response_model=List[MemberBadge])
+async def get_member_badges_info(
+    member_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get member's badges"""
+    member = await db.members.find_one({"id": member_id})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    return await get_member_badges(member_id)
+
+@api_router.post("/members/{member_id}/badges/{badge_code}")
+async def award_badge_to_member_manual(
+    member_id: str,
+    badge_code: str,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Manually award a badge to a member (admin only)"""
+    member = await db.members.find_one({"id": member_id})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    success = await award_badge_to_member(member_id, badge_code, current_user.id)
+    if success:
+        return {"message": f"Badge {badge_code} awarded successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Badge not found or already awarded")
+
+# Leaderboard Routes
+@api_router.get("/leaderboard", response_model=LeaderboardResponse)
+async def get_leaderboard(
+    period: str = "all_time",  # "monthly:YYYY-MM" or "all_time"
+    limit: int = 50
+):
+    """Get leaderboard for specified period"""
+    
+    # Validate period format
+    if period != "all_time" and not period.startswith("monthly:"):
+        raise HTTPException(status_code=400, detail="Invalid period format. Use 'all_time' or 'monthly:YYYY-MM'")
+    
+    # Get leaderboard entries
+    entries = await db.leaderboards.find({"period": period}).sort("rank", 1).limit(limit).to_list(None)
+    
+    leaderboard_entries = []
+    for entry in entries:
+        clean_mongo_doc(entry)
+        leaderboard_entries.append(LeaderboardEntry(**entry))
+    
+    total_entries = await db.leaderboards.count_documents({"period": period})
+    
+    return LeaderboardResponse(
+        period=period,
+        entries=leaderboard_entries,
+        total_entries=total_entries,
+        generated_at=datetime.now(timezone.utc)
+    )
+
+@api_router.post("/leaderboard/generate/{year}/{month}")
+async def generate_monthly_leaderboard(
+    year: int,
+    month: int,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Generate monthly leaderboard (admin only)"""
+    if not (1 <= month <= 12):
+        raise HTTPException(status_code=400, detail="Invalid month")
+    
+    if year < 2020 or year > 2030:
+        raise HTTPException(status_code=400, detail="Invalid year")
+    
+    await build_monthly_leaderboard(year, month)
+    return {"message": f"Monthly leaderboard generated for {year}-{month:02d}"}
+
+@api_router.post("/leaderboard/generate/all-time")
+async def generate_all_time_leaderboard(
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Generate all-time leaderboard (admin only)"""
+    await build_all_time_leaderboard()
+    return {"message": "All-time leaderboard generated"}
+
+# Daily job endpoint (for testing - in production this would be a cron job)
+@api_router.post("/jobs/daily")
+async def run_daily_jobs(
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Run daily maintenance jobs (admin only)"""
+    
+    # Check and award regular payer badges for all members
+    members = await db.members.find().to_list(None)
+    badges_awarded = 0
+    
+    for member in members:
+        try:
+            await check_and_award_regular_payer_badge(member["id"])
+            badges_awarded += 1
+        except Exception as e:
+            print(f"Error checking badges for member {member['id']}: {e}")
+    
+    # Rebuild all-time leaderboard
+    await build_all_time_leaderboard()
+    
+    return {
+        "message": "Daily jobs completed",
+        "members_checked": len(members), 
+        "badges_processed": badges_awarded
+    }
+
 # Initialize default data
 @api_router.post("/init-data")
 async def initialize_data():
