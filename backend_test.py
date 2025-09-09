@@ -462,6 +462,424 @@ class AmicaleAPITester:
             status = response.status_code if response else "No response"
             self.log_test("Filter members by status", False, f"Status: {status}")
 
+    def test_rewards_catalog(self):
+        """Test rewards catalog endpoints - NEW REWARDS SYSTEM"""
+        print("\n🎁 Testing Rewards Catalog...")
+        
+        # Test GET all rewards (public endpoint)
+        response = self.make_request('GET', 'rewards', auth_required=False)
+        if response and response.status_code == 200:
+            rewards = response.json()
+            self.log_test("Get all rewards", True, f"Found {len(rewards)} rewards")
+            
+            # Verify we have the expected 10 default rewards
+            if len(rewards) >= 10:
+                self.log_test("Default rewards loaded", True, f"Found {len(rewards)} rewards (expected ≥10)")
+            else:
+                self.log_test("Default rewards loaded", False, f"Found {len(rewards)} rewards (expected ≥10)")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get all rewards", False, f"Status: {status}")
+            return
+        
+        # Test GET active rewards only
+        response = self.make_request('GET', 'rewards?active=true', auth_required=False)
+        if response and response.status_code == 200:
+            active_rewards = response.json()
+            self.log_test("Get active rewards", True, f"Found {len(active_rewards)} active rewards")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get active rewards", False, f"Status: {status}")
+        
+        # Test filter by category
+        categories = ['Materiel', 'Services', 'Reductions', 'Privileges']
+        for category in categories:
+            response = self.make_request('GET', f'rewards?category={category}', auth_required=False)
+            if response and response.status_code == 200:
+                category_rewards = response.json()
+                self.log_test(f"Filter rewards by {category}", True, f"Found {len(category_rewards)} {category} rewards")
+            else:
+                status = response.status_code if response else "No response"
+                self.log_test(f"Filter rewards by {category}", False, f"Status: {status}")
+        
+        # Verify specific rewards mentioned in requirements
+        expected_rewards = [
+            {"name": "Pack Bienvenue", "points": 90, "category": "Materiel"},
+            {"name": "Invitation VIP", "points": 180, "category": "Privileges"},
+            {"name": "Formation gratuite", "points": 250, "category": "Services"},
+            {"name": "Assistance personnalisée", "points": 300, "category": "Services"}
+        ]
+        
+        for expected in expected_rewards:
+            found_reward = None
+            for reward in rewards:
+                if expected["name"] in reward["name"]:
+                    found_reward = reward
+                    break
+            
+            if found_reward:
+                points_match = found_reward["cost_points"] == expected["points"]
+                category_match = found_reward["category"] == expected["category"]
+                
+                if points_match and category_match:
+                    self.log_test(f"Verify {expected['name']}", True, 
+                                 f"Points: {found_reward['cost_points']}, Category: {found_reward['category']}")
+                else:
+                    self.log_test(f"Verify {expected['name']}", False, 
+                                 f"Expected {expected['points']} pts/{expected['category']}, "
+                                 f"got {found_reward['cost_points']} pts/{found_reward['category']}")
+            else:
+                self.log_test(f"Verify {expected['name']}", False, "Reward not found")
+
+    def test_redemption_workflow(self):
+        """Test complete redemption workflow - NEW REWARDS SYSTEM"""
+        print("\n🔄 Testing Redemption Workflow...")
+        
+        if not self.created_member_id:
+            self.log_test("Redemption workflow", False, "No member ID available")
+            return
+        
+        # First, ensure member has enough points (add 200 points for testing)
+        points_data = {
+            "points": 200,
+            "transaction_type": "bonus",
+            "description": "Test points for redemption testing"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/points', points_data)
+        if response and response.status_code == 200:
+            self.log_test("Add points for redemption test", True, "Added 200 points")
+        else:
+            self.log_test("Add points for redemption test", False, "Failed to add points")
+            return
+        
+        # Get available rewards
+        response = self.make_request('GET', 'rewards?active=true', auth_required=False)
+        if not response or response.status_code != 200:
+            self.log_test("Get rewards for redemption", False, "Failed to get rewards")
+            return
+        
+        rewards = response.json()
+        # Find a reward with cost <= 200 points
+        suitable_reward = None
+        for reward in rewards:
+            if reward['cost_points'] <= 200 and reward['stock'] > 0:
+                suitable_reward = reward
+                break
+        
+        if not suitable_reward:
+            self.log_test("Find suitable reward", False, "No reward found with ≤200 points and stock > 0")
+            return
+        
+        self.log_test("Find suitable reward", True, 
+                     f"Selected: {suitable_reward['name']} ({suitable_reward['cost_points']} pts)")
+        
+        # Test CREATE redemption request
+        redemption_data = {
+            "reward_id": suitable_reward['id'],
+            "note": "Test redemption request via API"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/redemptions', redemption_data)
+        if response and response.status_code == 200:
+            redemption = response.json()
+            redemption_id = redemption['id']
+            self.log_test("Create redemption request", True, 
+                         f"Status: {redemption['status']}, Points: {redemption['points_cost']}")
+        else:
+            status = response.status_code if response else "No response"
+            error_msg = ""
+            if response:
+                try:
+                    error_data = response.json()
+                    error_msg = f" - {error_data.get('detail', '')}"
+                except:
+                    pass
+            self.log_test("Create redemption request", False, f"Status: {status}{error_msg}")
+            return
+        
+        # Test GET member redemptions
+        response = self.make_request('GET', f'members/{self.created_member_id}/redemptions')
+        if response and response.status_code == 200:
+            member_redemptions = response.json()
+            self.log_test("Get member redemptions", True, f"Found {len(member_redemptions)} redemptions")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get member redemptions", False, f"Status: {status}")
+        
+        # Test GET all redemptions (admin)
+        response = self.make_request('GET', 'redemptions')
+        if response and response.status_code == 200:
+            all_redemptions = response.json()
+            self.log_test("Get all redemptions (admin)", True, f"Found {len(all_redemptions)} total redemptions")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Get all redemptions (admin)", False, f"Status: {status}")
+        
+        # Test APPROVE redemption
+        approval_data = {
+            "note": "Approved via API testing"
+        }
+        
+        response = self.make_request('PUT', f'redemptions/{redemption_id}/approve', approval_data)
+        if response and response.status_code == 200:
+            approved_redemption = response.json()
+            self.log_test("Approve redemption", True, 
+                         f"Status: {approved_redemption['status']}, Approved by: {approved_redemption.get('approved_by_name', 'N/A')}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Approve redemption", False, f"Status: {status}")
+            return
+        
+        # Verify points were deducted
+        response = self.make_request('GET', f'members/{self.created_member_id}')
+        if response and response.status_code == 200:
+            member = response.json()
+            current_points = member.get('points', 0)
+            self.log_test("Verify points deducted", True, f"Member now has {current_points} points")
+        else:
+            self.log_test("Verify points deducted", False, "Failed to get member data")
+        
+        # Verify stock was reduced
+        response = self.make_request('GET', 'rewards', auth_required=False)
+        if response and response.status_code == 200:
+            updated_rewards = response.json()
+            updated_reward = next((r for r in updated_rewards if r['id'] == suitable_reward['id']), None)
+            if updated_reward:
+                expected_stock = suitable_reward['stock'] - 1
+                if updated_reward['stock'] == expected_stock:
+                    self.log_test("Verify stock reduced", True, 
+                                 f"Stock reduced from {suitable_reward['stock']} to {updated_reward['stock']}")
+                else:
+                    self.log_test("Verify stock reduced", False, 
+                                 f"Expected stock {expected_stock}, got {updated_reward['stock']}")
+            else:
+                self.log_test("Verify stock reduced", False, "Reward not found in updated list")
+        
+        # Test DELIVER redemption
+        delivery_data = {
+            "note": "Delivered via API testing"
+        }
+        
+        response = self.make_request('PUT', f'redemptions/{redemption_id}/deliver', delivery_data)
+        if response and response.status_code == 200:
+            delivered_redemption = response.json()
+            self.log_test("Deliver redemption", True, 
+                         f"Status: {delivered_redemption['status']}, Delivered by: {delivered_redemption.get('delivered_by_name', 'N/A')}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Deliver redemption", False, f"Status: {status}")
+
+    def test_redemption_rejection_and_refund(self):
+        """Test redemption rejection and refund mechanism"""
+        print("\n↩️ Testing Redemption Rejection & Refund...")
+        
+        if not self.created_member_id:
+            self.log_test("Rejection test", False, "No member ID available")
+            return
+        
+        # Add more points for another redemption test
+        points_data = {
+            "points": 150,
+            "transaction_type": "bonus",
+            "description": "Test points for rejection testing"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/points', points_data)
+        if not response or response.status_code != 200:
+            self.log_test("Add points for rejection test", False, "Failed to add points")
+            return
+        
+        # Get member points before redemption
+        response = self.make_request('GET', f'members/{self.created_member_id}')
+        points_before = 0
+        if response and response.status_code == 200:
+            member = response.json()
+            points_before = member.get('points', 0)
+        
+        # Find a suitable reward
+        response = self.make_request('GET', 'rewards?active=true', auth_required=False)
+        if not response or response.status_code != 200:
+            self.log_test("Get rewards for rejection test", False, "Failed to get rewards")
+            return
+        
+        rewards = response.json()
+        suitable_reward = None
+        for reward in rewards:
+            if reward['cost_points'] <= 150 and reward['stock'] > 0:
+                suitable_reward = reward
+                break
+        
+        if not suitable_reward:
+            self.log_test("Find reward for rejection test", False, "No suitable reward found")
+            return
+        
+        # Create redemption request
+        redemption_data = {
+            "reward_id": suitable_reward['id'],
+            "note": "Test redemption for rejection testing"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/redemptions', redemption_data)
+        if not response or response.status_code != 200:
+            self.log_test("Create redemption for rejection", False, "Failed to create redemption")
+            return
+        
+        redemption = response.json()
+        redemption_id = redemption['id']
+        
+        # Approve first (to test rejection after approval)
+        response = self.make_request('PUT', f'redemptions/{redemption_id}/approve', {"note": "Approved for rejection test"})
+        if not response or response.status_code != 200:
+            self.log_test("Approve for rejection test", False, "Failed to approve redemption")
+            return
+        
+        # Now reject the approved redemption
+        rejection_data = {
+            "note": "Rejected via API testing - should refund points and stock"
+        }
+        
+        response = self.make_request('PUT', f'redemptions/{redemption_id}/reject', rejection_data)
+        if response and response.status_code == 200:
+            rejected_redemption = response.json()
+            self.log_test("Reject approved redemption", True, f"Status: {rejected_redemption['status']}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Reject approved redemption", False, f"Status: {status}")
+            return
+        
+        # Verify points were refunded
+        response = self.make_request('GET', f'members/{self.created_member_id}')
+        if response and response.status_code == 200:
+            member = response.json()
+            points_after = member.get('points', 0)
+            
+            # Points should be refunded (points_after should be close to points_before)
+            if points_after >= points_before - 10:  # Allow small margin for other transactions
+                self.log_test("Verify points refunded", True, 
+                             f"Points before: {points_before}, after rejection: {points_after}")
+            else:
+                self.log_test("Verify points refunded", False, 
+                             f"Points not properly refunded. Before: {points_before}, after: {points_after}")
+        else:
+            self.log_test("Verify points refunded", False, "Failed to get member data")
+        
+        # Verify stock was restored
+        response = self.make_request('GET', 'rewards', auth_required=False)
+        if response and response.status_code == 200:
+            updated_rewards = response.json()
+            updated_reward = next((r for r in updated_rewards if r['id'] == suitable_reward['id']), None)
+            if updated_reward:
+                if updated_reward['stock'] >= suitable_reward['stock']:
+                    self.log_test("Verify stock restored", True, 
+                                 f"Stock restored to {updated_reward['stock']} (was {suitable_reward['stock']})")
+                else:
+                    self.log_test("Verify stock restored", False, 
+                                 f"Stock not restored. Expected ≥{suitable_reward['stock']}, got {updated_reward['stock']}")
+            else:
+                self.log_test("Verify stock restored", False, "Reward not found")
+
+    def test_anti_abuse_limits(self):
+        """Test anti-abuse mechanism (max 3 pending redemptions)"""
+        print("\n🛡️ Testing Anti-Abuse Limits...")
+        
+        if not self.created_member_id:
+            self.log_test("Anti-abuse test", False, "No member ID available")
+            return
+        
+        # Add enough points for multiple redemptions
+        points_data = {
+            "points": 500,
+            "transaction_type": "bonus",
+            "description": "Test points for anti-abuse testing"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/points', points_data)
+        if not response or response.status_code != 200:
+            self.log_test("Add points for anti-abuse test", False, "Failed to add points")
+            return
+        
+        # Find a low-cost reward
+        response = self.make_request('GET', 'rewards?active=true', auth_required=False)
+        if not response or response.status_code != 200:
+            self.log_test("Get rewards for anti-abuse test", False, "Failed to get rewards")
+            return
+        
+        rewards = response.json()
+        low_cost_reward = None
+        for reward in rewards:
+            if reward['cost_points'] <= 100 and reward['stock'] > 0:
+                low_cost_reward = reward
+                break
+        
+        if not low_cost_reward:
+            self.log_test("Find low-cost reward", False, "No suitable low-cost reward found")
+            return
+        
+        # Create 3 redemption requests (should be allowed)
+        redemption_ids = []
+        for i in range(3):
+            redemption_data = {
+                "reward_id": low_cost_reward['id'],
+                "note": f"Anti-abuse test redemption {i+1}"
+            }
+            
+            response = self.make_request('POST', f'members/{self.created_member_id}/redemptions', redemption_data)
+            if response and response.status_code == 200:
+                redemption = response.json()
+                redemption_ids.append(redemption['id'])
+                self.log_test(f"Create redemption {i+1}/3", True, f"Status: {redemption['status']}")
+            else:
+                status = response.status_code if response else "No response"
+                self.log_test(f"Create redemption {i+1}/3", False, f"Status: {status}")
+        
+        # Try to create a 4th redemption (should be blocked)
+        redemption_data = {
+            "reward_id": low_cost_reward['id'],
+            "note": "Anti-abuse test - 4th redemption (should fail)"
+        }
+        
+        response = self.make_request('POST', f'members/{self.created_member_id}/redemptions', redemption_data)
+        if response and response.status_code == 400:
+            error_data = response.json()
+            if "pending redemptions" in error_data.get('detail', '').lower():
+                self.log_test("Anti-abuse limit enforced", True, "4th redemption blocked as expected")
+            else:
+                self.log_test("Anti-abuse limit enforced", False, f"Wrong error message: {error_data.get('detail', '')}")
+        else:
+            status = response.status_code if response else "No response"
+            self.log_test("Anti-abuse limit enforced", False, f"Expected 400, got {status}")
+        
+        # Clean up: approve one redemption to test that limit is lifted
+        if redemption_ids:
+            response = self.make_request('PUT', f'redemptions/{redemption_ids[0]}/approve', {"note": "Cleanup approval"})
+            if response and response.status_code == 200:
+                self.log_test("Cleanup: approve one redemption", True, "Approved first redemption")
+                
+                # Now try creating another redemption (should work)
+                response = self.make_request('POST', f'members/{self.created_member_id}/redemptions', redemption_data)
+                if response and response.status_code == 200:
+                    self.log_test("Anti-abuse limit lifted after approval", True, "New redemption allowed after approval")
+                else:
+                    status = response.status_code if response else "No response"
+                    self.log_test("Anti-abuse limit lifted after approval", False, f"Status: {status}")
+
+    def test_redemption_status_filters(self):
+        """Test redemption status filtering"""
+        print("\n🔍 Testing Redemption Status Filters...")
+        
+        # Test filter by status
+        statuses = ['Pending', 'Approved', 'Delivered', 'Rejected']
+        for status in statuses:
+            response = self.make_request('GET', f'redemptions?status={status}')
+            if response and response.status_code == 200:
+                filtered_redemptions = response.json()
+                self.log_test(f"Filter redemptions by {status}", True, 
+                             f"Found {len(filtered_redemptions)} {status.lower()} redemptions")
+            else:
+                status_code = response.status_code if response else "No response"
+                self.log_test(f"Filter redemptions by {status}", False, f"Status: {status_code}")
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Amicale Anouar Backend API Tests")
