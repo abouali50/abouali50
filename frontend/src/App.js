@@ -1092,6 +1092,12 @@ const MemberDetailsDialog = ({ member, payments, open, onOpenChange, onRefresh }
                 </p>
               </div>
               <div>
+                <Label>Points cumulés</Label>
+                <p className="text-sm font-semibold text-emerald-600">
+                  {member.points || 0} points
+                </p>
+              </div>
+              <div>
                 <Label>Date d'adhésion</Label>
                 <p className="text-sm text-gray-600">
                   {new Date(member.join_date).toLocaleDateString('fr-FR')}
