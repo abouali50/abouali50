@@ -467,6 +467,7 @@ async def get_reports_summary(
     total_outstanding = 0.0
     
     for member in all_members:
+        clean_mongo_doc(member)
         balance_info = await calculate_balance(member["id"])
         total_collected += balance_info["amount_paid"]
         if balance_info["balance"] > 0:
