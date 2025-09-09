@@ -212,6 +212,8 @@ const translations = {
     'reports.total_collected': 'Total Collected',
     'reports.total_outstanding': 'Total Outstanding',
     'reports.active_members': 'Active Members',
+    'reports.total_points': 'Points Distributed',
+    'reports.average_points': 'Average Points',
     'success.member_registered': 'Member registered successfully',
     'success.payment_added': 'Payment added successfully',
     'success.member_updated': 'Member updated successfully',
