@@ -147,6 +147,8 @@ const translations = {
     'reports.total_collected': 'إجمالي المجمع',
     'reports.total_outstanding': 'إجمالي المعلق',
     'reports.active_members': 'الأعضاء النشطون',
+    'reports.total_points': 'النقاط الموزعة',
+    'reports.average_points': 'متوسط النقاط',
     'success.member_registered': 'تم تسجيل العضو بنجاح',
     'success.payment_added': 'تم إضافة الدفعة بنجاح',
     'success.member_updated': 'تم تحديث العضو بنجاح',
