@@ -1036,12 +1036,16 @@ const MembersPage = () => {
     setSelectedMember(member);
     
     try {
-      const [paymentsResponse, pointsResponse] = await Promise.all([
+      const [paymentsResponse, pointsResponse, levelResponse, badgesResponse] = await Promise.all([
         axios.get(`${API}/members/${member.id}/payments`),
-        axios.get(`${API}/members/${member.id}/points`)
+        axios.get(`${API}/members/${member.id}/points`),
+        axios.get(`${API}/members/${member.id}/level`),
+        axios.get(`${API}/members/${member.id}/badges`)
       ]);
       setPayments(paymentsResponse.data);
       setPointsHistory(pointsResponse.data);
+      setMemberLevel(levelResponse.data);
+      setMemberBadges(badgesResponse.data);
     } catch (error) {
       console.error('Error fetching member data:', error);
     }
