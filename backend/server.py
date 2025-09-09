@@ -549,6 +549,17 @@ async def award_badge_to_member(member_id: str, badge_code: str, awarded_by: str
     )
     
     await db.member_badges.insert_one(member_badge.dict())
+    
+    # Send notification
+    member = await db.members.find_one({"id": member_id})
+    if member:
+        await notify_badge_awarded(
+            member_id, 
+            member["full_name"], 
+            badge["name"], 
+            badge.get("description", "")
+        )
+    
     return True
 
 async def check_and_award_regular_payer_badge(member_id: str):
