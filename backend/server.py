@@ -432,6 +432,19 @@ async def add_payment(
         {"$set": balance_info}
     )
     
+    # Calculate and add points for this payment
+    points_earned = calculate_points_from_payment(payment_data.amount)
+    if points_earned > 0:
+        await add_points_transaction(
+            member_id=member_id,
+            points=points_earned,
+            transaction_type="payment",
+            description=f"Points gagnés pour paiement de {payment_data.amount} MAD",
+            recorded_by=current_user.id,
+            recorded_by_name=current_user.name,
+            related_payment_id=payment.id
+        )
+    
     return payment
 
 @api_router.get("/members/{member_id}/payments", response_model=List[Payment])
