@@ -390,6 +390,239 @@ async def count_pending_redemptions(member_id: str) -> int:
     })
     return count
 
+# Levels & Badges Helper Functions
+async def calculate_total_points_earned(member_id: str) -> int:
+    """Calculate total points earned (excluding redemptions)"""
+    pipeline = [
+        {
+            "$match": {
+                "member_id": member_id,
+                "transaction_type": {"$in": ["payment", "bonus", "manual"]},
+                "points": {"$gt": 0}
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "total": {"$sum": "$points"}
+            }
+        }
+    ]
+    
+    result = await db.point_transactions.aggregate(pipeline).to_list(None)
+    return result[0]["total"] if result else 0
+
+async def get_member_level(member_id: str) -> MemberLevel:
+    """Get member's current level and progression"""
+    total_earned = await calculate_total_points_earned(member_id)
+    
+    # Get all levels sorted by min_points
+    levels = await db.levels.find().sort("min_points", 1).to_list(None)
+    
+    current_level = None
+    next_level = None
+    
+    # Find current level
+    for level in levels:
+        if total_earned >= level["min_points"]:
+            current_level = level
+        elif current_level and not next_level:
+            next_level = level
+            break
+    
+    if not current_level and levels:
+        current_level = levels[0]  # Default to first level
+    
+    # Calculate progress
+    progress_percentage = 0.0
+    points_to_next = 0
+    
+    if current_level and next_level:
+        points_in_level = total_earned - current_level["min_points"]
+        points_needed = next_level["min_points"] - current_level["min_points"]
+        progress_percentage = (points_in_level / points_needed) * 100
+        points_to_next = next_level["min_points"] - total_earned
+    elif current_level and not next_level:
+        progress_percentage = 100.0  # Max level reached
+    
+    return MemberLevel(
+        current_level=Level(**current_level) if current_level else None,
+        next_level=Level(**next_level) if next_level else None,
+        progress_percentage=round(progress_percentage, 1),
+        points_to_next=max(0, points_to_next)
+    )
+
+async def get_member_badges(member_id: str) -> List[MemberBadge]:
+    """Get all badges for a member"""
+    badges = await db.member_badges.find({"member_id": member_id}).sort("awarded_at", -1).to_list(None)
+    for badge in badges:
+        clean_mongo_doc(badge)
+    return [MemberBadge(**badge) for badge in badges]
+
+async def award_badge_to_member(member_id: str, badge_code: str, awarded_by: str = "system") -> bool:
+    """Award a badge to a member (if not already awarded)"""
+    # Check if badge exists
+    badge = await db.badges.find_one({"code": badge_code})
+    if not badge:
+        return False
+    
+    # Check if already awarded
+    existing = await db.member_badges.find_one({
+        "member_id": member_id,
+        "badge_id": badge["id"]
+    })
+    
+    if existing:
+        return False  # Already has this badge
+    
+    # Award the badge
+    member_badge = MemberBadge(
+        member_id=member_id,
+        badge_id=badge["id"],
+        badge_code=badge["code"],
+        badge_name=badge["name"]
+    )
+    
+    await db.member_badges.insert_one(member_badge.dict())
+    return True
+
+async def check_and_award_regular_payer_badge(member_id: str):
+    """Check if member qualifies for regular payer badge (3 consecutive months with payments)"""
+    # Get last 3 months of payments
+    three_months_ago = datetime.now(timezone.utc) - timedelta(days=90)
+    
+    # Get payments grouped by month
+    pipeline = [
+        {
+            "$match": {
+                "member_id": member_id,
+                "date": {"$gte": three_months_ago}
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "year": {"$year": "$date"},
+                    "month": {"$month": "$date"}
+                },
+                "count": {"$sum": 1}
+            }
+        },
+        {
+            "$sort": {"_id.year": -1, "_id.month": -1}
+        }
+    ]
+    
+    monthly_payments = await db.payments.aggregate(pipeline).to_list(None)
+    
+    if len(monthly_payments) >= 3:
+        # Check if last 3 months are consecutive
+        months = [(result["_id"]["year"], result["_id"]["month"]) for result in monthly_payments[:3]]
+        
+        # Simple check for 3 consecutive months (can be improved)
+        if len(months) == 3:
+            await award_badge_to_member(member_id, "REGULAR_PAYER")
+
+async def build_monthly_leaderboard(year: int, month: int):
+    """Build leaderboard for a specific month"""
+    # Calculate start and end dates for the month
+    start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+    
+    # Get points earned in this month (payment and bonus only)
+    pipeline = [
+        {
+            "$match": {
+                "date": {"$gte": start_date, "$lt": end_date},
+                "transaction_type": {"$in": ["payment", "bonus"]},
+                "points": {"$gt": 0}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$member_id",
+                "total_points": {"$sum": "$points"}
+            }
+        },
+        {
+            "$sort": {"total_points": -1}
+        }
+    ]
+    
+    monthly_points = await db.point_transactions.aggregate(pipeline).to_list(None)
+    
+    period = f"monthly:{year}-{month:02d}"
+    
+    # Clear existing leaderboard for this period
+    await db.leaderboards.delete_many({"period": period})
+    
+    # Create leaderboard entries
+    rank = 1
+    for entry in monthly_points:
+        member = await db.members.find_one({"id": entry["_id"]})
+        if member:
+            member_level = await get_member_level(entry["_id"])
+            member_badges = await get_member_badges(entry["_id"])
+            
+            leaderboard_entry = LeaderboardEntry(
+                period=period,
+                rank=rank,
+                member_id=entry["_id"],
+                member_name=member["full_name"],
+                points=entry["total_points"],
+                level_name=member_level.current_level.name if member_level.current_level else "Bronze",
+                badge_count=len(member_badges)
+            )
+            
+            await db.leaderboards.insert_one(leaderboard_entry.dict())
+            
+            # Award top 3 badge
+            if rank <= 3:
+                await award_badge_to_member(entry["_id"], "TOP_3_MONTH")
+            
+            rank += 1
+
+async def build_all_time_leaderboard():
+    """Build all-time leaderboard"""
+    # Get all members and their total earned points
+    members = await db.members.find().to_list(None)
+    
+    leaderboard_data = []
+    for member in members:
+        total_earned = await calculate_total_points_earned(member["id"])
+        if total_earned > 0:
+            member_level = await get_member_level(member["id"])
+            member_badges = await get_member_badges(member["id"])
+            
+            leaderboard_data.append({
+                "member_id": member["id"],
+                "member_name": member["full_name"],
+                "points": total_earned,
+                "level_name": member_level.current_level.name if member_level.current_level else "Bronze",
+                "badge_count": len(member_badges)
+            })
+    
+    # Sort by points descending
+    leaderboard_data.sort(key=lambda x: x["points"], reverse=True)
+    
+    period = "all_time"
+    
+    # Clear existing all-time leaderboard
+    await db.leaderboards.delete_many({"period": period})
+    
+    # Create leaderboard entries
+    for rank, data in enumerate(leaderboard_data, 1):
+        leaderboard_entry = LeaderboardEntry(
+            period=period,
+            rank=rank,
+            **data
+        )
+        
+        await db.leaderboards.insert_one(leaderboard_entry.dict())
+
 # Authentication Routes
 @api_router.post("/auth/login", response_model=Token)
 async def login(user_data: UserLogin):
