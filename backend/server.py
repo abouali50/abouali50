@@ -206,6 +206,7 @@ async def login(user_data: UserLogin):
     if not user or not verify_password(user_data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    user = clean_mongo_doc(user)
     access_token = create_access_token({"sub": user["id"]})
     user.pop("password_hash", None)
     
