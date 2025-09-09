@@ -328,6 +328,7 @@ async def get_member(
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     
+    clean_mongo_doc(member)
     balance_info = await calculate_balance(member_id)
     member.update(balance_info)
     
