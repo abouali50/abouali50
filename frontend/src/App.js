@@ -180,6 +180,7 @@ const translations = {
     'member.status': 'Status',
     'member.join_date': 'Join Date',
     'member.notes': 'Notes',
+    'member.points': 'Points',
     'payment.add': 'Add Payment',
     'payment.amount': 'Amount',
     'payment.method': 'Method',
