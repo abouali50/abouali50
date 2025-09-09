@@ -2376,6 +2376,220 @@ const MemberBadgesCard = ({ badges, t }) => {
   );
 };
 
+// Gamification Monitor Page
+const GamificationMonitorPage = () => {
+  const { t } = useI18n();
+  const [kpiData, setKpiData] = useState(null);
+  const [recentActivity, setRecentActivity] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchMonitoringData();
+  }, []);
+  
+  const fetchMonitoringData = async () => {
+    try {
+      const [kpiResponse, activityResponse] = await Promise.all([
+        axios.get(`${API}/monitor/gamification/summary`),
+        axios.get(`${API}/monitor/gamification/recent-activity?limit=10`)
+      ]);
+      
+      setKpiData(kpiResponse.data);
+      setRecentActivity(activityResponse.data);
+    } catch (error) {
+      console.error('Error fetching monitoring data:', error);
+      toast.error(t('error.occurred'));
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleExportLeaderboard = async () => {
+    try {
+      const response = await axios.get(`${API}/export/leaderboard?period=all_time`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `classement_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Classement exporté avec succès');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+  
+  const handleExportRedemptions = async () => {
+    try {
+      const response = await axios.get(`${API}/export/redemptions`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `echanges_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Échanges exportés avec succès');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+  
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-12">Chargement du monitoring...</div>
+      </AdminLayout>
+    );
+  }
+  
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Monitoring Gamification</h2>
+            <p className="text-gray-600">Vue d'ensemble du système de points, niveaux et badges</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleExportLeaderboard} variant="outline">
+              📊 Export Classement
+            </Button>
+            <Button onClick={handleExportRedemptions} variant="outline">
+              🎁 Export Échanges
+            </Button>
+          </div>
+        </div>
+        
+        {/* KPI Cards */}
+        {kpiData && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Points Distribués Total</CardTitle>
+                <Award className="h-4 w-4 text-emerald-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{kpiData.total_points_distributed.toLocaleString()} pts</div>
+                <p className="text-xs text-muted-foreground">
+                  Moyenne: {kpiData.average_points_per_member} pts/membre
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Badges Ce Mois</CardTitle>
+                <Star className="h-4 w-4 text-yellow-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{kpiData.badges_awarded_this_month}</div>
+                <p className="text-xs text-muted-foreground">
+                  Nouveaux badges attribués
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Échanges en Attente</CardTitle>
+                <ShoppingCart className="h-4 w-4 text-orange-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{kpiData.pending_redemptions}</div>
+                <p className="text-xs text-muted-foreground">
+                  Taux approbation: {kpiData.redemption_approval_rate}%
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        
+        {/* Level Distribution */}
+        {kpiData && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Répartition des Niveaux</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(kpiData.level_distribution).map(([level, count]) => (
+                  <div key={level} className="text-center p-4 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-emerald-600">{count}</div>
+                    <div className="text-sm text-gray-600">{level}</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Recent Activity */}
+        {recentActivity && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Dernières Transactions Points</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {recentActivity.recent_points.slice(0, 5).map((transaction, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <div>
+                        <span className="font-medium">{transaction.description}</span>
+                        <p className="text-xs text-gray-500">
+                          {new Date(transaction.date).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                      <span className={`font-bold ${transaction.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {transaction.points > 0 ? '+' : ''}{transaction.points} pts
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Derniers Badges Attribués</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {recentActivity.recent_badges.slice(0, 5).map((badge, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <div>
+                        <span className="font-medium">{badge.badge_name}</span>
+                        <p className="text-xs text-gray-500">
+                          {new Date(badge.awarded_at).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                      <Star className="h-4 w-4 text-yellow-500" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
