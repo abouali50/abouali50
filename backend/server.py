@@ -1782,6 +1782,217 @@ async def initialize_data():
     
     return {"message": "Default data initialized with rewards, levels, badges and leaderboards"}
 
+# WebSocket Notifications Endpoint
+@api_router.websocket("/ws/notifications")
+async def websocket_notifications(websocket: WebSocket, member_id: str):
+    """WebSocket endpoint for real-time notifications"""
+    await notification_manager.connect(websocket, member_id)
+    try:
+        while True:
+            # Keep connection alive - wait for any message
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        notification_manager.disconnect(websocket, member_id)
+
+# Gamification KPI and Monitoring Endpoints
+@api_router.get("/monitor/gamification/summary", response_model=GamificationKPI)
+async def get_gamification_kpi(
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Get gamification KPIs for admin dashboard"""
+    
+    # Total points distributed (positive transactions only)
+    pipeline_total_points = [
+        {"$match": {"points": {"$gt": 0}}},
+        {"$group": {"_id": None, "total": {"$sum": "$points"}}}
+    ]
+    total_points_result = await db.point_transactions.aggregate(pipeline_total_points).to_list(None)
+    total_points_distributed = total_points_result[0]["total"] if total_points_result else 0
+    
+    # Average points per member
+    all_members_count = await db.members.count_documents({})
+    average_points_per_member = total_points_distributed / all_members_count if all_members_count > 0 else 0
+    
+    # Badges awarded this month
+    current_month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    badges_this_month = await db.member_badges.count_documents({
+        "awarded_at": {"$gte": current_month_start}
+    })
+    
+    # Pending redemptions
+    pending_redemptions = await db.reward_redemptions.count_documents({
+        "status": RedemptionStatus.PENDING
+    })
+    
+    # Redemption approval rate (last 30 days)
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    redemption_stats = await db.reward_redemptions.aggregate([
+        {"$match": {"created_at": {"$gte": thirty_days_ago}}},
+        {"$group": {
+            "_id": None,
+            "total": {"$sum": 1},
+            "approved": {"$sum": {"$cond": [{"$eq": ["$status", "Approved"]}, 1, 0]}},
+            "delivered": {"$sum": {"$cond": [{"$eq": ["$status", "Delivered"]}, 1, 0]}}
+        }}
+    ]).to_list(None)
+    
+    if redemption_stats and redemption_stats[0]["total"] > 0:
+        total_redemptions = redemption_stats[0]["total"]
+        successful_redemptions = redemption_stats[0]["approved"] + redemption_stats[0]["delivered"]
+        approval_rate = (successful_redemptions / total_redemptions) * 100
+    else:
+        approval_rate = 0.0
+    
+    # Level distribution
+    level_distribution = {}
+    all_members = await db.members.find().to_list(None)
+    
+    for member in all_members:
+        member_level = await get_member_level(member["id"])
+        level_name = member_level.current_level.name if member_level.current_level else "Bronze"
+        level_distribution[level_name] = level_distribution.get(level_name, 0) + 1
+    
+    return GamificationKPI(
+        total_points_distributed=total_points_distributed,
+        average_points_per_member=round(average_points_per_member, 1),
+        badges_awarded_this_month=badges_this_month,
+        pending_redemptions=pending_redemptions,
+        redemption_approval_rate=round(approval_rate, 1),
+        level_distribution=level_distribution
+    )
+
+@api_router.get("/monitor/gamification/recent-activity")
+async def get_recent_gamification_activity(
+    limit: int = 20,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Get recent gamification activity for monitoring"""
+    
+    # Recent point transactions
+    recent_points = await db.point_transactions.find().sort("date", -1).limit(limit).to_list(None)
+    for transaction in recent_points:
+        clean_mongo_doc(transaction)
+    
+    # Recent badge awards
+    recent_badges = await db.member_badges.find().sort("awarded_at", -1).limit(limit).to_list(None)
+    for badge in recent_badges:
+        clean_mongo_doc(badge)
+    
+    # Recent redemptions
+    recent_redemptions = await db.reward_redemptions.find().sort("created_at", -1).limit(limit).to_list(None)
+    for redemption in recent_redemptions:
+        clean_mongo_doc(redemption)
+    
+    return {
+        "recent_points": recent_points,
+        "recent_badges": recent_badges,
+        "recent_redemptions": recent_redemptions
+    }
+
+# CSV Export Endpoints
+@api_router.get("/export/leaderboard")
+async def export_leaderboard_csv(
+    period: str = "all_time",
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Export leaderboard to CSV"""
+    
+    # Get leaderboard data
+    leaderboard_entries = await db.leaderboards.find({"period": period}).sort("rank", 1).to_list(None)
+    
+    if not leaderboard_entries:
+        raise HTTPException(status_code=404, detail="No leaderboard data found for this period")
+    
+    # Create CSV content
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(["Rang", "Membre", "Points", "Niveau", "Badges", "Date_Generation"])
+    
+    # Write data
+    for entry in leaderboard_entries:
+        writer.writerow([
+            entry["rank"],
+            entry["member_name"], 
+            entry["points"],
+            entry.get("level_name", "N/A"),
+            entry.get("badge_count", 0),
+            entry["created_at"].strftime("%Y-%m-%d %H:%M:%S") if entry.get("created_at") else "N/A"
+        ])
+    
+    # Create response
+    csv_content = output.getvalue()
+    output.close()
+    
+    filename = f"classement_{period}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+@api_router.get("/export/redemptions")
+async def export_redemptions_csv(
+    status: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Export redemptions to CSV"""
+    
+    # Build filter query
+    filter_query = {}
+    if status:
+        filter_query["status"] = status
+    
+    if from_date or to_date:
+        date_filter = {}
+        if from_date:
+            date_filter["$gte"] = datetime.fromisoformat(from_date.replace('Z', '+00:00'))
+        if to_date:
+            date_filter["$lte"] = datetime.fromisoformat(to_date.replace('Z', '+00:00'))
+        filter_query["created_at"] = date_filter
+    
+    # Get redemptions data
+    redemptions = await db.reward_redemptions.find(filter_query).sort("created_at", -1).to_list(None)
+    
+    # Create CSV content
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        "Date_Demande", "Membre", "Récompense", "Points_Coût", 
+        "Statut", "Approuvé_Par", "Date_Approbation", "Note"
+    ])
+    
+    # Write data
+    for redemption in redemptions:
+        writer.writerow([
+            redemption["created_at"].strftime("%Y-%m-%d %H:%M:%S"),
+            redemption["member_name"],
+            redemption["reward_name"],
+            redemption["points_cost"],
+            redemption["status"],
+            redemption.get("approved_by_name", "N/A"),
+            redemption["updated_at"].strftime("%Y-%m-%d %H:%M:%S") if redemption.get("updated_at") else "N/A",
+            redemption.get("note", "")
+        ])
+    
+    # Create response
+    csv_content = output.getvalue()
+    output.close()
+    
+    filename = f"echanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
 # Include router
 app.include_router(api_router)
 
