@@ -715,7 +715,7 @@ const DashboardPage = () => {
         </div>
         
         {reports && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t('reports.total_members')}</CardTitle>
@@ -753,6 +753,26 @@ const DashboardPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{reports.total_outstanding.toFixed(2)} MAD</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('reports.total_points')}</CardTitle>
+                <span className="text-yellow-500">⭐</span>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{reports.total_points_distributed || 0} pts</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('reports.average_points')}</CardTitle>
+                <span className="text-emerald-500">📊</span>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{reports.average_points_per_member || 0} pts</div>
               </CardContent>
             </Card>
           </div>
