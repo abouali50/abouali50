@@ -2001,6 +2001,343 @@ const RedemptionsHistoryDialog = ({ redemptions, open, onOpenChange, onRefresh }
   );
 };
 
+// Leaderboard Page
+const LeaderboardPage = () => {
+  const { t } = useI18n();
+  const [leaderboard, setLeaderboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState('all_time');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [selectedPeriod]);
+  
+  const fetchLeaderboard = async () => {
+    setLoading(true);
+    try {
+      let period = selectedPeriod;
+      if (selectedPeriod === 'monthly' && selectedMonth) {
+        period = `monthly:${selectedMonth}`;
+      }
+      
+      const response = await axios.get(`${API}/leaderboard?period=${period}&limit=50`);
+      setLeaderboard(response.data);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      toast.error(t('error.occurred'));
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    if (period === 'monthly' && !selectedMonth) {
+      const currentDate = new Date();
+      setSelectedMonth(`${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`);
+    }
+  };
+  
+  const getLevelIcon = (levelName) => {
+    switch (levelName?.toLowerCase()) {
+      case 'bronze': return <Medal className="h-5 w-5 text-orange-600" />;
+      case 'argent': 
+      case 'silver': return <Medal className="h-5 w-5 text-gray-400" />;
+      case 'or':
+      case 'gold': return <Medal className="h-5 w-5 text-yellow-500" />;
+      case 'platine':
+      case 'platinum': return <Crown className="h-5 w-5 text-purple-600" />;
+      default: return <Medal className="h-5 w-5 text-gray-400" />;
+    }
+  };
+  
+  const getRankIcon = (rank) => {
+    switch (rank) {
+      case 1: return <Trophy className="h-6 w-6 text-yellow-500" />;
+      case 2: return <Medal className="h-6 w-6 text-gray-400" />;
+      case 3: return <Medal className="h-6 w-6 text-orange-600" />;
+      default: return <span className="text-lg font-bold text-gray-600">#{rank}</span>;
+    }
+  };
+  
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-12">Chargement du classement...</div>
+      </AdminLayout>
+    );
+  }
+  
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">{t('leaderboard.title')}</h2>
+            <p className="text-gray-600">Découvrez les membres les plus actifs</p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex gap-2">
+            <Button 
+              variant={selectedPeriod === 'all_time' ? 'default' : 'outline'}
+              onClick={() => handlePeriodChange('all_time')}
+            >
+              {t('leaderboard.all_time')}
+            </Button>
+            <Button 
+              variant={selectedPeriod === 'monthly' ? 'default' : 'outline'}
+              onClick={() => handlePeriodChange('monthly')}
+            >
+              {t('leaderboard.monthly')}
+            </Button>
+          </div>
+          
+          {selectedPeriod === 'monthly' && (
+            <div className="flex items-center gap-2">
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-40"
+              />
+              <Button onClick={fetchLeaderboard} size="sm">
+                Actualiser
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {leaderboard && leaderboard.entries.length > 0 ? (
+          <div className="space-y-6">
+            {/* Podium Top 3 */}
+            {leaderboard.entries.length >= 3 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    {t('leaderboard.top_3')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {leaderboard.entries.slice(0, 3).map((entry, index) => (
+                      <div key={entry.member_id} className={`text-center p-6 rounded-lg ${
+                        index === 0 ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200' :
+                        index === 1 ? 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200' :
+                        'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200'
+                      } border-2`}>
+                        <div className="mb-3">
+                          {getRankIcon(entry.rank)}
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">{entry.member_name}</h3>
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          {getLevelIcon(entry.level_name)}
+                          <span className="text-sm font-medium">{entry.level_name}</span>
+                        </div>
+                        <p className="text-2xl font-bold text-emerald-600">{entry.points} pts</p>
+                        {entry.badge_count > 0 && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            {entry.badge_count} {t('badges.count')}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Full Leaderboard Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Classement complet</CardTitle>
+                <CardDescription>
+                  {leaderboard.total_entries} membres • 
+                  Généré le {new Date(leaderboard.generated_at).toLocaleDateString('fr-FR')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">{t('leaderboard.rank')}</TableHead>
+                      <TableHead>{t('leaderboard.member')}</TableHead>
+                      <TableHead>{t('leaderboard.level')}</TableHead>
+                      <TableHead>{t('leaderboard.points')}</TableHead>
+                      <TableHead>Badges</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leaderboard.entries.map((entry) => (
+                      <TableRow key={entry.member_id}>
+                        <TableCell className="font-medium">
+                          {entry.rank <= 3 ? getRankIcon(entry.rank) : `#${entry.rank}`}
+                        </TableCell>
+                        <TableCell className="font-medium">{entry.member_name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getLevelIcon(entry.level_name)}
+                            <span className="text-sm">{entry.level_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-semibold text-emerald-600">{entry.points} pts</span>
+                        </TableCell>
+                        <TableCell>
+                          {entry.badge_count > 0 ? (
+                            <Badge variant="outline">
+                              <Star className="h-3 w-3 mr-1" />
+                              {entry.badge_count}
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Aucun classement disponible pour cette période</p>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
+// Member Level Component
+const MemberLevelCard = ({ memberLevel, t }) => {
+  if (!memberLevel || !memberLevel.current_level) {
+    return null;
+  }
+  
+  const getLevelColor = (levelName) => {
+    switch (levelName?.toLowerCase()) {
+      case 'bronze': return 'from-orange-100 to-orange-200 border-orange-300';
+      case 'argent': 
+      case 'silver': return 'from-gray-100 to-gray-200 border-gray-300';
+      case 'or':
+      case 'gold': return 'from-yellow-100 to-yellow-200 border-yellow-300';
+      case 'platine':
+      case 'platinum': return 'from-purple-100 to-purple-200 border-purple-300';
+      default: return 'from-gray-100 to-gray-200 border-gray-300';
+    }
+  };
+  
+  const getLevelIcon = (levelName) => {
+    switch (levelName?.toLowerCase()) {
+      case 'bronze': return <Medal className="h-6 w-6 text-orange-600" />;
+      case 'argent':
+      case 'silver': return <Medal className="h-6 w-6 text-gray-500" />;
+      case 'or':
+      case 'gold': return <Crown className="h-6 w-6 text-yellow-600" />;
+      case 'platine':
+      case 'platinum': return <Crown className="h-6 w-6 text-purple-600" />;
+      default: return <Medal className="h-6 w-6 text-gray-400" />;
+    }
+  };
+  
+  return (
+    <Card className={`bg-gradient-to-r ${getLevelColor(memberLevel.current_level.name)} border-2`}>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            {getLevelIcon(memberLevel.current_level.name)}
+            <div>
+              <h3 className="font-bold text-lg">{t('levels.current')}</h3>
+              <p className="text-lg font-semibold">{memberLevel.current_level.name}</p>
+            </div>
+          </div>
+          {memberLevel.next_level && (
+            <div className="text-right">
+              <p className="text-sm text-gray-600">{t('levels.next')}</p>
+              <p className="font-medium">{memberLevel.next_level.name}</p>
+            </div>
+          )}
+        </div>
+        
+        {memberLevel.next_level && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>{t('levels.progress')}</span>
+              <span>{memberLevel.progress_percentage}%</span>
+            </div>
+            <div className="w-full bg-white rounded-full h-2">
+              <div 
+                className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${memberLevel.progress_percentage}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-gray-600 text-center">
+              {memberLevel.points_to_next} {t('levels.points_to_next')}
+            </p>
+          </div>
+        )}
+        
+        {memberLevel.current_level.benefits && (
+          <div className="mt-4 p-3 bg-white bg-opacity-50 rounded-lg">
+            <p className="text-sm text-gray-700">{memberLevel.current_level.benefits}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Member Badges Component
+const MemberBadgesCard = ({ badges, t }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Star className="h-5 w-5 text-yellow-500" />
+          {t('badges.earned')} ({badges.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {badges.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {badges.map((badge) => (
+              <div key={badge.id} className="text-center p-4 bg-gray-50 rounded-lg">
+                {badge.image_url ? (
+                  <img 
+                    src={badge.image_url} 
+                    alt={badge.badge_name}
+                    className="w-12 h-12 mx-auto mb-2 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 mx-auto mb-2 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <Star className="h-6 w-6 text-emerald-600" />
+                  </div>
+                )}
+                <h4 className="font-semibold text-sm">{badge.badge_name}</h4>
+                <p className="text-xs text-gray-500 mt-1">
+                  {new Date(badge.awarded_at).toLocaleDateString('fr-FR')}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Aucun badge obtenu pour le moment</p>
+            <p className="text-sm text-gray-400 mt-1">Continuez à participer pour débloquer des badges !</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
