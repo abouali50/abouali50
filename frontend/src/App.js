@@ -82,6 +82,8 @@ const translations = {
     'reports.total_collected': 'Total collecté',
     'reports.total_outstanding': 'Total en attente',
     'reports.active_members': 'Adhérents actifs',
+    'reports.total_points': 'Points distribués',
+    'reports.average_points': 'Moyenne points',
     'success.member_registered': 'Adhérent enregistré avec succès',
     'success.payment_added': 'Paiement ajouté avec succès',
     'success.member_updated': 'Adhérent mis à jour avec succès',
