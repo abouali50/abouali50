@@ -533,7 +533,7 @@ const MemberRegistrationPage = () => {
               
               <div>
                 <Label htmlFor="project_type">{t('member.project_type')} *</Label>
-                <Select value={formData.project_type_id} onValueChange={(value) => setFormData({...formData, project_type_id: value})}>
+                <Select value={formData.project_type_id || undefined} onValueChange={(value) => setFormData({...formData, project_type_id: value})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez un type de projet" />
                   </SelectTrigger>
