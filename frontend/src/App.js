@@ -2406,6 +2406,12 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              <Route path="/leaderboard" element={
+                <ProtectedRoute>
+                  <LeaderboardPage />
+                </ProtectedRoute>
+              } />
+              
               <Route path="/reports" element={
                 <ProtectedRoute>
                   <DashboardPage />
