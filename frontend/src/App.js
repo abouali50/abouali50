@@ -1003,6 +1003,7 @@ const MembersPage = () => {
         <MemberDetailsDialog
           member={selectedMember}
           payments={payments}
+          pointsHistory={pointsHistory}
           open={showMemberDialog}
           onOpenChange={setShowMemberDialog}
           onRefresh={fetchData}
