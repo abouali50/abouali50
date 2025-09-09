@@ -1506,13 +1506,19 @@ const RewardsPage = () => {
   
   const fetchData = async () => {
     try {
-      const [rewardsResponse, redemptionsResponse] = await Promise.all([
-        axios.get(`${API}/rewards?active=true`),
-        axios.get(`${API}/redemptions`)
-      ]);
-      
+      // Always fetch rewards (public endpoint)
+      const rewardsResponse = await axios.get(`${API}/rewards?active=true`);
       setRewards(rewardsResponse.data);
-      setRedemptions(redemptionsResponse.data);
+      
+      // Try to fetch redemptions (admin endpoint)
+      try {
+        const redemptionsResponse = await axios.get(`${API}/redemptions`);
+        setRedemptions(redemptionsResponse.data);
+      } catch (redemptionError) {
+        // If user doesn't have permission for redemptions, that's okay
+        console.log('No permission for redemptions or no redemptions available');
+        setRedemptions([]);
+      }
     } catch (error) {
       console.error('Error fetching rewards data:', error);
       toast.error(t('error.occurred'));
