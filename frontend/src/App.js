@@ -938,12 +938,20 @@ const MembersPage = () => {
                       </span>
                     </TableCell>
                     <TableCell>
+                      <span className="text-emerald-600 font-semibold">
+                        {member.points || 0} pts
+                      </span>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex space-x-2">
                         <Button size="sm" variant="outline" onClick={() => handleViewMember(member)}>
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button size="sm" onClick={() => handleAddPayment(member)}>
                           <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleAddPoints(member)}>
+                          ⭐
                         </Button>
                       </div>
                     </TableCell>
