@@ -885,6 +885,11 @@ const MembersPage = () => {
     setShowPaymentDialog(true);
   };
   
+  const handleAddPoints = (member) => {
+    setSelectedMember(member);
+    setShowPointsDialog(true);
+  };
+  
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          member.phone.includes(searchQuery);
