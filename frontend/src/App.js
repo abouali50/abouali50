@@ -1220,8 +1220,10 @@ const MemberDetailsDialog = ({ member, payments, pointsHistory, open, onOpenChan
         </DialogHeader>
         
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">Informations</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="details">Infos</TabsTrigger>
+            <TabsTrigger value="level">Niveau</TabsTrigger>
+            <TabsTrigger value="badges">Badges</TabsTrigger>
             <TabsTrigger value="payments">Paiements</TabsTrigger>
             <TabsTrigger value="points">Points</TabsTrigger>
           </TabsList>
