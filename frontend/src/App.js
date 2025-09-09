@@ -50,6 +50,7 @@ const translations = {
     'member.status': 'Statut',
     'member.join_date': 'Date d\'adhésion',
     'member.notes': 'Notes',
+    'member.points': 'Points',
     'payment.add': 'Ajouter un paiement',
     'payment.amount': 'Montant',
     'payment.method': 'Méthode',
