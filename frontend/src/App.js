@@ -1155,6 +1155,102 @@ const MemberDetailsDialog = ({ member, payments, open, onOpenChange, onRefresh }
   );
 };
 
+// Add Points Dialog Component
+const AddPointsDialog = ({ member, open, onOpenChange, onSuccess }) => {
+  const { t } = useI18n();
+  const [formData, setFormData] = useState({
+    points: '',
+    transaction_type: 'manual',
+    description: ''
+  });
+  const [loading, setLoading] = useState(false);
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/members/${member.id}/points`, {
+        points: parseInt(formData.points),
+        transaction_type: formData.transaction_type,
+        description: formData.description
+      });
+      
+      toast.success('Points ajoutés avec succès');
+      setFormData({ points: '', transaction_type: 'manual', description: '' });
+      onSuccess();
+    } catch (error) {
+      toast.error(t('error.occurred'));
+      console.error('Points error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (!member) return null;
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ajouter des points</DialogTitle>
+          <p className="text-sm text-gray-600">
+            Adhérent: {member.full_name} | Points actuels: {member.points || 0}
+          </p>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="points">Nombre de points *</Label>
+            <Input
+              id="points"
+              type="number"
+              value={formData.points}
+              onChange={(e) => setFormData({...formData, points: e.target.value})}
+              placeholder="Entrez le nombre de points (positif ou négatif)"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="transaction_type">Type de transaction *</Label>
+            <Select value={formData.transaction_type || undefined} onValueChange={(value) => setFormData({...formData, transaction_type: value})}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manual">Attribution manuelle</SelectItem>
+                <SelectItem value="bonus">Bonus</SelectItem>
+                <SelectItem value="deduction">Déduction</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Description *</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder="Raison de l'attribution des points"
+              required
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {t('action.cancel')}
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Ajout...' : t('action.save')}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Add Payment Dialog Component
 const AddPaymentDialog = ({ member, open, onOpenChange, onSuccess }) => {
   const { t } = useI18n();
