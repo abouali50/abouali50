@@ -2452,6 +2452,7 @@ function App() {
             <Toaster position="top-right" />
           </div>
         </BrowserRouter>
+      </NotificationProvider>
       </AuthProvider>
     </I18nProvider>
   );
