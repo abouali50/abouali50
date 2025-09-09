@@ -350,6 +350,7 @@ async def update_member(
         await db.members.update_one({"id": member_id}, {"$set": update_data})
     
     updated_member = await db.members.find_one({"id": member_id})
+    clean_mongo_doc(updated_member)
     balance_info = await calculate_balance(member_id)
     updated_member.update(balance_info)
     
