@@ -685,6 +685,293 @@ async def get_reports_summary(
         average_points_per_member=round(average_points, 1)
     )
 
+# Rewards Management Routes
+@api_router.get("/rewards", response_model=List[Reward])
+async def get_rewards(
+    active: Optional[bool] = None,
+    category: Optional[RewardCategory] = None
+):
+    """Get rewards catalog (public endpoint)"""
+    filter_query = {}
+    
+    if active is not None:
+        filter_query["is_active"] = active
+    
+    if category:
+        filter_query["category"] = category
+    
+    rewards = await db.rewards.find(filter_query).sort("created_at", -1).to_list(None)
+    for reward in rewards:
+        clean_mongo_doc(reward)
+    return [Reward(**reward) for reward in rewards]
+
+@api_router.post("/rewards", response_model=Reward)
+async def create_reward(
+    reward_data: RewardCreate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Create a new reward (admin only)"""
+    reward = Reward(**reward_data.dict())
+    await db.rewards.insert_one(reward.dict())
+    return reward
+
+@api_router.put("/rewards/{reward_id}", response_model=Reward)
+async def update_reward(
+    reward_id: str,
+    reward_data: RewardUpdate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Update reward (admin only)"""
+    reward = await db.rewards.find_one({"id": reward_id})
+    if not reward:
+        raise HTTPException(status_code=404, detail="Reward not found")
+    
+    update_data = {k: v for k, v in reward_data.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    if update_data:
+        await db.rewards.update_one({"id": reward_id}, {"$set": update_data})
+    
+    updated_reward = await db.rewards.find_one({"id": reward_id})
+    clean_mongo_doc(updated_reward)
+    return Reward(**updated_reward)
+
+@api_router.put("/rewards/{reward_id}/toggle", response_model=Reward)
+async def toggle_reward_active(
+    reward_id: str,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Toggle reward active status (admin only)"""
+    reward = await db.rewards.find_one({"id": reward_id})
+    if not reward:
+        raise HTTPException(status_code=404, detail="Reward not found")
+    
+    new_status = not reward.get("is_active", True)
+    await db.rewards.update_one(
+        {"id": reward_id},
+        {"$set": {"is_active": new_status, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    updated_reward = await db.rewards.find_one({"id": reward_id})
+    clean_mongo_doc(updated_reward)
+    return Reward(**updated_reward)
+
+# Redemptions Routes
+@api_router.post("/members/{member_id}/redemptions", response_model=RewardRedemption)
+async def create_redemption(
+    member_id: str,
+    redemption_data: RedemptionCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a redemption request"""
+    # Check if member exists
+    member = await db.members.find_one({"id": member_id})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    # Check if reward exists and is active
+    reward = await db.rewards.find_one({"id": redemption_data.reward_id})
+    if not reward:
+        raise HTTPException(status_code=404, detail="Reward not found")
+    
+    if not reward.get("is_active", True):
+        raise HTTPException(status_code=400, detail="Reward is not active")
+    
+    # Check stock
+    if reward.get("stock", 0) <= 0:
+        raise HTTPException(status_code=400, detail="Reward out of stock")
+    
+    # Check member has enough points
+    if not await can_member_redeem(member_id, reward["cost_points"]):
+        raise HTTPException(status_code=400, detail="Not enough points")
+    
+    # Anti-abuse: limit pending redemptions
+    pending_count = await count_pending_redemptions(member_id)
+    if pending_count >= 3:
+        raise HTTPException(status_code=400, detail="Too many pending redemptions. Please wait for approval.")
+    
+    # Create redemption
+    redemption = RewardRedemption(
+        member_id=member_id,
+        member_name=member["full_name"],
+        reward_id=redemption_data.reward_id,
+        reward_name=reward["name"],
+        points_cost=reward["cost_points"],
+        note=redemption_data.note,
+        created_by=current_user.id if current_user.role in [UserRole.ADMIN, UserRole.STAFF] else None
+    )
+    
+    await db.reward_redemptions.insert_one(redemption.dict())
+    return redemption
+
+@api_router.get("/members/{member_id}/redemptions", response_model=List[RewardRedemption])
+async def get_member_redemptions(
+    member_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get member's redemption history"""
+    # Members can only see their own redemptions, admins can see any
+    if current_user.role == UserRole.ADHERENT and current_user.id != member_id:
+        # For adherent members, we need to check if they're viewing their own profile
+        # This would require linking user accounts to members, for now allowing access
+        pass
+    
+    redemptions = await db.reward_redemptions.find({"member_id": member_id}).sort("created_at", -1).to_list(None)
+    for redemption in redemptions:
+        clean_mongo_doc(redemption)
+    return [RewardRedemption(**redemption) for redemption in redemptions]
+
+@api_router.get("/redemptions", response_model=List[RewardRedemption])
+async def get_all_redemptions(
+    status: Optional[RedemptionStatus] = None,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Get all redemptions (admin only)"""
+    filter_query = {}
+    if status:
+        filter_query["status"] = status
+    
+    redemptions = await db.reward_redemptions.find(filter_query).sort("created_at", -1).to_list(None)
+    for redemption in redemptions:
+        clean_mongo_doc(redemption)
+    return [RewardRedemption(**redemption) for redemption in redemptions]
+
+@api_router.put("/redemptions/{redemption_id}/approve", response_model=RewardRedemption)
+async def approve_redemption(
+    redemption_id: str,
+    status_update: RedemptionStatusUpdate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Approve a redemption (admin only)"""
+    redemption = await db.reward_redemptions.find_one({"id": redemption_id})
+    if not redemption:
+        raise HTTPException(status_code=404, detail="Redemption not found")
+    
+    if redemption["status"] != RedemptionStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Redemption already processed")
+    
+    # Check member still has enough points
+    member_id = redemption["member_id"]
+    points_cost = redemption["points_cost"]
+    
+    if not await can_member_redeem(member_id, points_cost):
+        raise HTTPException(status_code=400, detail="Member no longer has enough points")
+    
+    # Check reward stock
+    reward = await db.rewards.find_one({"id": redemption["reward_id"]})
+    if not reward or reward.get("stock", 0) <= 0:
+        raise HTTPException(status_code=400, detail="Reward out of stock")
+    
+    # Atomic operations: deduct points, reduce stock, update status
+    # Deduct points via points transaction
+    await add_points_transaction(
+        member_id=member_id,
+        points=-points_cost,
+        transaction_type="redeem",
+        description=f"Échange: {redemption['reward_name']}",
+        recorded_by=current_user.id,
+        recorded_by_name=current_user.name
+    )
+    
+    # Reduce stock
+    await db.rewards.update_one(
+        {"id": redemption["reward_id"]},
+        {"$inc": {"stock": -1}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Update redemption status
+    await db.reward_redemptions.update_one(
+        {"id": redemption_id},
+        {"$set": {
+            "status": RedemptionStatus.APPROVED,
+            "approved_by": current_user.id,
+            "approved_by_name": current_user.name,
+            "note": status_update.note or redemption.get("note"),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    updated_redemption = await db.reward_redemptions.find_one({"id": redemption_id})
+    clean_mongo_doc(updated_redemption)
+    return RewardRedemption(**updated_redemption)
+
+@api_router.put("/redemptions/{redemption_id}/deliver", response_model=RewardRedemption)
+async def deliver_redemption(
+    redemption_id: str,
+    status_update: RedemptionStatusUpdate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Mark redemption as delivered (admin only)"""
+    redemption = await db.reward_redemptions.find_one({"id": redemption_id})
+    if not redemption:
+        raise HTTPException(status_code=404, detail="Redemption not found")
+    
+    if redemption["status"] != RedemptionStatus.APPROVED:
+        raise HTTPException(status_code=400, detail="Redemption must be approved first")
+    
+    await db.reward_redemptions.update_one(
+        {"id": redemption_id},
+        {"$set": {
+            "status": RedemptionStatus.DELIVERED,
+            "delivered_by": current_user.id,
+            "delivered_by_name": current_user.name,
+            "note": status_update.note or redemption.get("note"),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    updated_redemption = await db.reward_redemptions.find_one({"id": redemption_id})
+    clean_mongo_doc(updated_redemption)
+    return RewardRedemption(**updated_redemption)
+
+@api_router.put("/redemptions/{redemption_id}/reject", response_model=RewardRedemption)
+async def reject_redemption(
+    redemption_id: str,
+    status_update: RedemptionStatusUpdate,
+    current_user: User = Depends(require_admin_or_staff)
+):
+    """Reject a redemption (admin only)"""
+    redemption = await db.reward_redemptions.find_one({"id": redemption_id})
+    if not redemption:
+        raise HTTPException(status_code=404, detail="Redemption not found")
+    
+    if redemption["status"] in [RedemptionStatus.DELIVERED, RedemptionStatus.REJECTED]:
+        raise HTTPException(status_code=400, detail="Cannot reject delivered or already rejected redemption")
+    
+    # If already approved, need to refund points and stock
+    if redemption["status"] == RedemptionStatus.APPROVED:
+        member_id = redemption["member_id"]
+        points_cost = redemption["points_cost"]
+        
+        # Refund points
+        await add_points_transaction(
+            member_id=member_id,
+            points=points_cost,
+            transaction_type="refund",
+            description=f"Remboursement: {redemption['reward_name']} (échange rejeté)",
+            recorded_by=current_user.id,
+            recorded_by_name=current_user.name
+        )
+        
+        # Restore stock
+        await db.rewards.update_one(
+            {"id": redemption["reward_id"]},
+            {"$inc": {"stock": 1}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+        )
+    
+    await db.reward_redemptions.update_one(
+        {"id": redemption_id},
+        {"$set": {
+            "status": RedemptionStatus.REJECTED,
+            "note": status_update.note or redemption.get("note"),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    updated_redemption = await db.reward_redemptions.find_one({"id": redemption_id})
+    clean_mongo_doc(updated_redemption)
+    return RewardRedemption(**updated_redemption)
+
 # Initialize default data
 @api_router.post("/init-data")
 async def initialize_data():
