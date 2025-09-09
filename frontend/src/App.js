@@ -812,6 +812,11 @@ const DashboardPage = () => {
                           {member.balance.toFixed(2)} MAD
                         </span>
                       </TableCell>
+                      <TableCell>
+                        <span className="text-emerald-600 font-semibold">
+                          {member.points || 0} pts
+                        </span>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
