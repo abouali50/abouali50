@@ -403,10 +403,24 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   
+  // Get demo member ID for notifications (in real app, this would be user's member profile)
+  const [demoMemberId, setDemoMemberId] = useState(null);
+  
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // You could verify token validity here
+      // Get first member for demo notifications
+      const fetchDemoMember = async () => {
+        try {
+          const response = await axios.get(`${API}/members`);
+          if (response.data.length > 0) {
+            setDemoMemberId(response.data[0].id);
+          }
+        } catch (error) {
+          console.log('Could not fetch demo member for notifications');
+        }
+      };
+      fetchDemoMember();
     }
   }, [token]);
   
