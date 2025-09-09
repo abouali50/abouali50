@@ -1165,6 +1165,13 @@ class AmicaleAPITester:
         self.test_anti_abuse_limits()
         self.test_redemption_status_filters()
         
+        # Test PHASE 2: LEVELS & BADGES + LEADERBOARD SYSTEM
+        self.test_levels_system()
+        self.test_badges_system()
+        self.test_leaderboard_system()
+        self.test_daily_jobs()
+        self.test_specific_member_scenarios()
+        
         self.test_reports()
         self.test_member_search_and_filters()
         
