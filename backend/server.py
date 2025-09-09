@@ -167,6 +167,73 @@ class ReportsSummary(BaseModel):
     total_points_distributed: int
     average_points_per_member: float
 
+# Rewards System Models
+class RewardCategory(str, Enum):
+    MATERIEL = "Materiel"
+    SERVICES = "Services"
+    REDUCTIONS = "Reductions"
+    PRIVILEGES = "Privileges"
+
+class RedemptionStatus(str, Enum):
+    PENDING = "Pending"
+    APPROVED = "Approved"
+    DELIVERED = "Delivered"
+    REJECTED = "Rejected"
+    CANCELED = "Canceled"
+
+class Reward(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    category: RewardCategory
+    description: Optional[str] = None
+    cost_points: int = Field(..., ge=0)
+    stock: int = Field(..., ge=0)
+    is_active: bool = True
+    image_url: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RewardCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    category: RewardCategory
+    description: Optional[str] = None
+    cost_points: int = Field(..., ge=0)
+    stock: int = Field(..., ge=0)
+    image_url: Optional[str] = None
+
+class RewardUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[RewardCategory] = None
+    description: Optional[str] = None
+    cost_points: Optional[int] = None
+    stock: Optional[int] = None
+    is_active: Optional[bool] = None
+    image_url: Optional[str] = None
+
+class RewardRedemption(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    member_id: str
+    member_name: str
+    reward_id: str
+    reward_name: str
+    points_cost: int
+    status: RedemptionStatus = RedemptionStatus.PENDING
+    note: Optional[str] = None
+    created_by: Optional[str] = None
+    approved_by: Optional[str] = None
+    approved_by_name: Optional[str] = None
+    delivered_by: Optional[str] = None
+    delivered_by_name: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RedemptionCreate(BaseModel):
+    reward_id: str
+    note: Optional[str] = None
+
+class RedemptionStatusUpdate(BaseModel):
+    note: Optional[str] = None
+
 # Helper Functions
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
