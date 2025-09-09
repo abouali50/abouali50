@@ -482,6 +482,12 @@ class AmicaleAPITester:
         self.test_member_registration()
         self.test_member_management()
         self.test_payment_management()
+        
+        # Test NEW POINTS SYSTEM functionality
+        self.test_points_system()
+        self.test_automatic_points_from_payment()
+        self.test_hassan_alami_scenario()
+        
         self.test_reports()
         self.test_member_search_and_filters()
         
