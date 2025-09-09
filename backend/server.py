@@ -256,7 +256,7 @@ class Badge(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class BadgeCreate(BaseModel):
-    code: str = Field(..., pattern=r'^[A-Z_]+$')
+    code: str = Field(..., pattern=r'^[A-Z0-9_]+$')
     name: str = Field(..., min_length=2, max_length=100)
     description: Optional[str] = None
     image_url: Optional[str] = None
