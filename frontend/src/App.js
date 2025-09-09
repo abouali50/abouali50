@@ -11,7 +11,7 @@ import { Badge } from './components/ui/badge';
 import { Textarea } from './components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
-import { Users, CreditCard, TrendingUp, UserPlus, Settings, Globe, LogOut, Plus, Search, Filter, Eye, Edit, DollarSign, Gift, ShoppingCart, Award } from 'lucide-react';
+import { Users, CreditCard, TrendingUp, UserPlus, Settings, Globe, LogOut, Plus, Search, Filter, Eye, Edit, DollarSign, Gift, ShoppingCart, Award, Trophy, Crown, Medal, Star, ChevronRight, Progress } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import './App.css';
 
