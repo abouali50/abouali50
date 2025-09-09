@@ -1534,7 +1534,7 @@ const RewardsPage = () => {
   const categories = [
     { value: 'ALL', label: 'Toutes' },
     { value: 'Materiel', label: t('rewards.category.materiel') },
-    { value: 'Services', label: t('rewar ds.category.services') },
+    { value: 'Services', label: t('rewards.category.services') },
     { value: 'Reductions', label: t('rewards.category.reductions') },
     { value: 'Privileges', label: t('rewards.category.privileges') }
   ];
