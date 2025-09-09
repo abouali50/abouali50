@@ -103,6 +103,7 @@ class MemberUpdate(BaseModel):
     total_due: Optional[float] = None
     status: Optional[MemberStatus] = None
     notes: Optional[str] = None
+    points: Optional[int] = None
 
 class Payment(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
