@@ -643,6 +643,12 @@ async def build_monthly_leaderboard(year: int, month: int):
             )
             
             await db.leaderboards.insert_one(leaderboard_entry.dict())
+            
+            # Award top 3 badge
+            if rank <= 3:
+                await award_badge_to_member(entry["_id"], "TOP_3_MONTH")
+            
+            rank += 1
 
 # Notification Helper Functions
 async def notify_level_up(member_id: str, member_name: str, old_level: str, new_level: str):
