@@ -2660,6 +2660,12 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              <Route path="/monitor" element={
+                <ProtectedRoute>
+                  <GamificationMonitorPage />
+                </ProtectedRoute>
+              } />
+              
               <Route path="/reports" element={
                 <ProtectedRoute>
                   <DashboardPage />
