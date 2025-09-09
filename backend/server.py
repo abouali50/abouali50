@@ -1549,7 +1549,69 @@ async def initialize_data():
             reward = Reward(**reward_data)
             await db.rewards.insert_one(reward.dict())
     
-    return {"message": "Default data initialized with rewards catalog"}
+    # Create default levels
+    default_levels = [
+        {"name": "Bronze", "min_points": 0, "benefits": "Accès de base aux récompenses"},
+        {"name": "Argent", "min_points": 51, "benefits": "Réductions supplémentaires sur les échanges"},
+        {"name": "Or", "min_points": 201, "benefits": "Accès prioritaire aux événements"},
+        {"name": "Platine", "min_points": 500, "benefits": "Avantages VIP et consultation gratuite"}
+    ]
+    
+    for level_data in default_levels:
+        existing = await db.levels.find_one({"name": level_data["name"]})
+        if not existing:
+            level = Level(**level_data)
+            await db.levels.insert_one(level.dict())
+    
+    # Create default badges
+    default_badges = [
+        {
+            "code": "REGULAR_PAYER",
+            "name": "Payeur Régulier",
+            "description": "3 mois consécutifs avec au moins un paiement",
+            "image_url": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=100&h=100&fit=crop"
+        },
+        {
+            "code": "TOP_3_MONTH",
+            "name": "Top 3 du Mois",
+            "description": "Classé dans le top 3 mensuel",
+            "image_url": "https://images.unsplash.com/photo-1534030347209-467a5b0ad3e6?w=100&h=100&fit=crop"
+        },
+        {
+            "code": "FIRST_PAYMENT",
+            "name": "Premier Paiement",
+            "description": "Premier paiement effectué",
+            "image_url": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=100&h=100&fit=crop"
+        },
+        {
+            "code": "BIG_SPENDER",
+            "name": "Gros Échangeur",
+            "description": "Plus de 500 points échangés",
+            "image_url": "https://images.unsplash.com/photo-1607003417796-8412f036e09b?w=100&h=100&fit=crop"
+        },
+        {
+            "code": "EARLY_ADOPTER",
+            "name": "Utilisateur Précoce",
+            "description": "Parmi les premiers membres de l'association",
+            "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+        }
+    ]
+    
+    for badge_data in default_badges:
+        existing = await db.badges.find_one({"code": badge_data["code"]})
+        if not existing:
+            badge = Badge(**badge_data)
+            await db.badges.insert_one(badge.dict())
+    
+    # Generate initial leaderboards
+    try:
+        current_date = datetime.now(timezone.utc)
+        await build_monthly_leaderboard(current_date.year, current_date.month)
+        await build_all_time_leaderboard()
+    except Exception as e:
+        print(f"Error generating initial leaderboards: {e}")
+    
+    return {"message": "Default data initialized with rewards, levels, badges and leaderboards"}
 
 # Include router
 app.include_router(api_router)
