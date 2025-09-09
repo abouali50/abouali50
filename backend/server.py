@@ -220,6 +220,33 @@ def clean_mongo_doc(doc):
         del doc["_id"]
     return doc
 
+def calculate_points_from_payment(amount: float) -> int:
+    """Calculate points based on payment amount (1 point per 10 MAD)"""
+    return int(amount // 10)
+
+async def add_points_transaction(member_id: str, points: int, transaction_type: str, description: str, recorded_by: str, recorded_by_name: str, related_payment_id: str = None):
+    """Add a points transaction and update member points"""
+    transaction = PointTransaction(
+        member_id=member_id,
+        points=points,
+        transaction_type=transaction_type,
+        description=description,
+        recorded_by=recorded_by,
+        recorded_by_name=recorded_by_name,
+        related_payment_id=related_payment_id
+    )
+    
+    await db.point_transactions.insert_one(transaction.dict())
+    
+    # Update member points
+    member = await db.members.find_one({"id": member_id})
+    if member:
+        new_points = member.get("points", 0) + points
+        await db.members.update_one(
+            {"id": member_id},
+            {"$set": {"points": max(0, new_points)}}  # Ensure points don't go negative
+        )
+
 # Authentication Routes
 @api_router.post("/auth/login", response_model=Token)
 async def login(user_data: UserLogin):
