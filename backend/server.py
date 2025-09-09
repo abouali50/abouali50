@@ -234,6 +234,64 @@ class RedemptionCreate(BaseModel):
 class RedemptionStatusUpdate(BaseModel):
     note: Optional[str] = None
 
+# Levels & Badges System Models
+class Level(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    min_points: int = Field(..., ge=0)
+    benefits: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class LevelCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=50)
+    min_points: int = Field(..., ge=0)
+    benefits: Optional[str] = None
+
+class Badge(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    code: str = Field(..., regex=r'^[A-Z_]+$')  # e.g., "REGULAR_PAYER", "TOP_3_MONTH"
+    name: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BadgeCreate(BaseModel):
+    code: str = Field(..., regex=r'^[A-Z_]+$')
+    name: str = Field(..., min_length=2, max_length=100)
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+
+class MemberBadge(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    member_id: str
+    badge_id: str
+    badge_code: str
+    badge_name: str
+    awarded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class MemberLevel(BaseModel):
+    current_level: Level
+    next_level: Optional[Level] = None
+    progress_percentage: float = 0.0
+    points_to_next: int = 0
+
+class LeaderboardEntry(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    period: str  # "monthly:2025-09" or "all_time"
+    rank: int
+    member_id: str
+    member_name: str
+    points: int
+    level_name: Optional[str] = None
+    badge_count: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class LeaderboardResponse(BaseModel):
+    period: str
+    entries: List[LeaderboardEntry]
+    total_entries: int
+    generated_at: datetime
+
 # Helper Functions
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
