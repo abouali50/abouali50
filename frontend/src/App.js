@@ -917,6 +917,7 @@ const MembersPage = () => {
                   <TableHead>{t('member.project_type')}</TableHead>
                   <TableHead>{t('member.status')}</TableHead>
                   <TableHead>{t('member.balance')}</TableHead>
+                  <TableHead>{t('member.points')}</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
