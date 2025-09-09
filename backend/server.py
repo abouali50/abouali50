@@ -402,6 +402,8 @@ async def get_all_payments(
     current_user: User = Depends(require_admin_or_staff)
 ):
     payments = await db.payments.find().sort("date", -1).to_list(100)
+    for payment in payments:
+        clean_mongo_doc(payment)
     return [Payment(**payment) for payment in payments]
 
 # Project Types Routes
