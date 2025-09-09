@@ -393,6 +393,8 @@ async def get_member_payments(
     current_user: User = Depends(require_admin_or_staff)
 ):
     payments = await db.payments.find({"member_id": member_id}).sort("date", -1).to_list(None)
+    for payment in payments:
+        clean_mongo_doc(payment)
     return [Payment(**payment) for payment in payments]
 
 @api_router.get("/payments", response_model=List[Payment])
