@@ -1014,6 +1014,17 @@ const MembersPage = () => {
             setShowPaymentDialog(false);
           }}
         />
+        
+        {/* Add Points Dialog */}
+        <AddPointsDialog
+          member={selectedMember}
+          open={showPointsDialog}
+          onOpenChange={setShowPointsDialog}
+          onSuccess={() => {
+            fetchData();
+            setShowPointsDialog(false);
+          }}
+        />
       </div>
     </AdminLayout>
   );
