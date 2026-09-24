@@ -338,3 +338,14 @@ textarea:focus { outline: none; border-color: var(--lime); }
 .notfound { min-height: 70vh; display: grid; place-items: center; text-align: center; }
 .notfound strong { font-family: var(--display); font-size: clamp(96px, 20vw, 200px); line-height: 1; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .notfound p { color: var(--muted); margin: 12px 0 28px; }
+
+/* ---------- Studio: real generations ---------- */
+.output__result img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.output__result img:not([hidden]) ~ .badge { z-index: 2; }
+.output__result .dl { position: absolute; z-index: 2; right: 12px; top: 12px; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--lime); color: var(--ink); }
+.history img { width: 44px; flex: none; aspect-ratio: 4/5; object-fit: cover; border-radius: 8px; border: 1px solid var(--line-2); cursor: pointer; }
+.studio__error { color: var(--coral); font-size: 14px; text-align: center; }
+.studio__error[hidden] { display: none; }
+.live { display: inline-flex; align-items: center; gap: 6px; color: var(--lime); }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); }
+.play[hidden] { display: none; }

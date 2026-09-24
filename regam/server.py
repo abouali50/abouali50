@@ -1,7 +1,8 @@
 """Regam — serveur du site vitrine.
 
-Sert le site statique de `public/` et expose une petite API d'inscription
-qui enregistre les e-mails dans une base SQLite.
+Sert le site statique de `public/` et expose l'API :
+  - inscriptions (SQLite) + e-mail de bienvenue (voir mailer.py)
+  - génération d'images IA pour le studio (voir generate.py)
 
 Lancement :  uvicorn server:app --reload --port 8080
 Export CSV : python server.py export > inscriptions.csv
@@ -16,9 +17,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, Field
+
+import generate
+import mailer
 
 ROOT = Path(__file__).parent
 PUBLIC_DIR = ROOT / "public"
@@ -49,11 +53,29 @@ def init_db() -> None:
             )
             """
         )
+        db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS generations (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip         TEXT NOT NULL,
+                mode       TEXT NOT NULL,
+                prompt     TEXT NOT NULL,
+                url        TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        db.execute("CREATE INDEX IF NOT EXISTS generations_day ON generations (created_at)")
 
 
 # ---------------------------------------------------------------- rate limit
 
 _hits: dict[str, deque] = defaultdict(deque)
+
+
+def client_ip(request: Request) -> str:
+    # Derrière un proxy, lancer uvicorn avec --proxy-headers (voir README).
+    return request.client.host if request.client else "unknown"
 
 
 def rate_limited(key: str) -> bool:
@@ -85,9 +107,10 @@ def health() -> dict:
 
 
 @app.post("/api/signup", status_code=201)
-def signup(payload: SignupIn, request: Request, response: Response) -> dict:
-    client = request.client.host if request.client else "unknown"
-    if rate_limited(client):
+def signup(
+    payload: SignupIn, request: Request, response: Response, background: BackgroundTasks
+) -> dict:
+    if rate_limited(client_ip(request)):
         raise HTTPException(status_code=429, detail="Trop de tentatives.")
 
     # Un robot a rempli le champ caché : on répond comme si tout allait bien.
@@ -103,7 +126,59 @@ def signup(payload: SignupIn, request: Request, response: Response) -> dict:
     if cur.rowcount == 0:
         response.status_code = 200
         return {"ok": True, "already": True}
+    background.add_task(mailer.send_welcome, email, payload.plan)
     return {"ok": True, "already": False}
+
+
+# ---------------------------------------------------------------- studio IA
+
+def today_start() -> str:
+    now = datetime.now(timezone.utc)
+    return now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+
+def usage_today(ip: str) -> tuple[int, int]:
+    """(générations de cette IP aujourd'hui, générations totales aujourd'hui)"""
+    with closing(connect()) as db:
+        mine, total = db.execute(
+            "SELECT COALESCE(SUM(ip = ?), 0), COUNT(*) FROM generations WHERE created_at >= ?",
+            (ip, today_start()),
+        ).fetchone()
+    return mine, total
+
+
+@app.get("/api/studio")
+def studio_status(request: Request) -> dict:
+    if not generate.is_enabled():
+        return {"enabled": False}
+    mine, _ = usage_today(client_ip(request))
+    return {"enabled": True, "modes": ["avatar", "image"], "remaining": max(0, generate.per_ip_limit() - mine)}
+
+
+@app.post("/api/generate")
+def generate_endpoint(payload: generate.GenerateIn, request: Request) -> dict:
+    if not generate.is_enabled():
+        raise HTTPException(status_code=503, detail="Le studio est en mode démo.")
+    ip = client_ip(request)
+    if rate_limited(f"gen:{ip}"):
+        raise HTTPException(status_code=429, detail="Trop de tentatives. Patiente une minute.")
+    mine, total = usage_today(ip)
+    if mine >= generate.per_ip_limit():
+        raise HTTPException(status_code=429, detail="Tu as utilisé toutes tes générations gratuites du jour. Reviens demain !")
+    if total >= generate.daily_cap():
+        raise HTTPException(status_code=503, detail="Le studio est très demandé aujourd'hui. Reviens demain !")
+
+    try:
+        image = generate.generate_image(payload)
+    except generate.GenerationError as exc:
+        raise HTTPException(status_code=exc.status, detail=str(exc)) from exc
+
+    with closing(connect()) as db, db:
+        db.execute(
+            "INSERT INTO generations (ip, mode, prompt, url, created_at) VALUES (?, ?, ?, ?, ?)",
+            (ip, payload.mode, payload.prompt, image["url"], datetime.now(timezone.utc).isoformat()),
+        )
+    return {**image, "remaining": max(0, generate.per_ip_limit() - mine - 1)}
 
 
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])

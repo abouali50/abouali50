@@ -39,20 +39,47 @@
     tick();
   }
 
-  /* ---------- Studio demo ---------- */
+  /* ---------- Studio ---------- */
+  // Si le serveur a une clé d'API, Avatar et Image appellent un vrai modèle ;
+  // sinon (ou en mode Vidéo) le studio reste une démo visuelle.
   const COST = { avatar: 2, image: 1, video: 8 };
   const LABEL = { avatar: "Avatar", image: "Image", video: "Vidéo" };
   const PALETTES = ["", "portrait--2", "portrait--3", "portrait--4", "portrait--5"];
   const STEPS = ["Analyse du prompt…", "Composition de la scène…", "Rendu des détails…", "Upscale 4K…"];
+  const studio = { live: false, remaining: 0 };
   let mode = "avatar";
   let busy = false;
+  let hasResult = false;
+
+  const isLive = () => studio.live && mode !== "video";
+  const choice = (group) => $(`.choices[data-group=${group}] .is-on`);
+
+  const updateCost = () => {
+    const cost = $("#cost");
+    if (isLive()) cost.textContent = studio.remaining > 0
+      ? `· ${studio.remaining} gratuite${studio.remaining > 1 ? "s" : ""} aujourd'hui`
+      : "· quota du jour atteint";
+    else if (studio.live) cost.textContent = "· démo (bientôt)";
+    else cost.textContent = `· ${COST[mode]} crédit${COST[mode] > 1 ? "s" : ""}`;
+  };
+
+  fetch("/api/studio")
+    .then((r) => (r.ok ? r.json() : { enabled: false }))
+    .then((data) => {
+      if (!data.enabled) return;
+      studio.live = true;
+      studio.remaining = data.remaining;
+      $("#studioMode").innerHTML = '<span class="live">Studio connecté</span> · Avatar et Image génèrent de vraies images';
+      updateCost();
+    })
+    .catch(() => {});
 
   const tabs = $$(".tabs [role=tab]");
   tabs.forEach((tab) => tab.addEventListener("click", () => {
     mode = tab.dataset.mode;
     tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
     $$("[data-only]").forEach((el) => { el.hidden = el.dataset.only !== mode; });
-    $("#cost").textContent = `· ${COST[mode]} crédit${COST[mode] > 1 ? "s" : ""}`;
+    updateCost();
   }));
 
   $$(".choices").forEach((group) => {
@@ -66,36 +93,132 @@
 
   const out = { empty: $("#outEmpty"), loading: $("#outLoading"), result: $("#outResult") };
   const show = (key) => Object.entries(out).forEach(([k, el]) => { el.hidden = k !== key; });
+  const errorBox = $("#studioError");
+  const showError = (text) => { errorBox.textContent = text; errorBox.hidden = !text; };
 
-  $("#generate").addEventListener("click", () => {
-    if (busy) return;
-    busy = true;
-    show("loading");
+  // Barre de progression : jusqu'à `cap` en `duration` ms, puis attente.
+  const progress = (duration, cap = 1) => {
     const bar = $("#loadingBar");
     const txt = $("#loadingText");
-    const total = mode === "video" ? 3200 : 2200;
     const start = performance.now();
-
+    let stopped = false;
     const frame = (now) => {
-      const t = Math.min(1, (now - start) / total);
-      bar.style.width = `${Math.round(t * 100)}%`;
-      txt.textContent = STEPS[Math.min(STEPS.length - 1, Math.floor(t * STEPS.length))];
-      if (t < 1) return requestAnimationFrame(frame);
-
-      const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-      const res = out.result;
-      res.className = `output__result portrait ${palette}`.trim();
-      $("#resultBadge").textContent = `${LABEL[mode]} · ${mode === "video" ? $(".choices[data-group=duree] .is-on").textContent : "4K"}`;
-      $("#resultPlay").hidden = mode !== "video";
-      show("result");
-
-      const thumb = document.createElement("div");
-      thumb.className = `portrait ${palette}`.trim();
-      thumb.innerHTML = '<svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg>';
-      $("#history").prepend(thumb);
-      busy = false;
+      if (stopped) return;
+      const t = Math.min(1, (now - start) / duration);
+      bar.style.width = `${Math.round(t * cap * 100)}%`;
+      txt.textContent = STEPS[Math.min(STEPS.length - 1, Math.floor(t * cap * STEPS.length))];
+      if (t < 1) requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
+    return () => { stopped = true; bar.style.width = "100%"; };
+  };
+
+  const showResult = ({ palette = "", img = null, badge }) => {
+    const res = out.result;
+    res.className = `output__result portrait ${palette}`.trim();
+    const image = $("#resultImg");
+    image.hidden = !img;
+    if (img) {
+      image.src = img;
+      image.alt = $("#prompt").value.trim();
+    } else {
+      image.removeAttribute("src");
+    }
+    $(".dl", res)?.remove();
+    if (img) {
+      const dl = document.createElement("a");
+      dl.className = "dl";
+      dl.href = img;
+      dl.target = "_blank";
+      dl.rel = "noopener";
+      dl.textContent = "Ouvrir ↗";
+      res.append(dl);
+    }
+    $("#resultBadge").textContent = badge;
+    $("#resultPlay").hidden = mode !== "video" || !!img;
+    hasResult = true;
+    show("result");
+  };
+
+  const addHistory = (entry) => {
+    let thumb;
+    if (entry.img) {
+      thumb = document.createElement("img");
+      thumb.src = entry.img;
+      thumb.alt = "";
+      thumb.addEventListener("click", () => showResult(entry));
+    } else {
+      thumb = document.createElement("div");
+      thumb.className = `portrait ${entry.palette}`.trim();
+      thumb.innerHTML = '<svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg>';
+    }
+    $("#history").prepend(thumb);
+  };
+
+  const runDemo = () => new Promise((resolve) => {
+    const total = mode === "video" ? 3200 : 2200;
+    progress(total);
+    setTimeout(() => {
+      const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+      const entry = { palette, badge: `${LABEL[mode]} · ${mode === "video" ? choice("duree").textContent : "4K"} · démo` };
+      showResult(entry);
+      addHistory(entry);
+      resolve();
+    }, total);
+  });
+
+  const runLive = async () => {
+    const stop = progress(9000, 0.92);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode,
+          prompt: $("#prompt").value.trim(),
+          style: choice("style").dataset.v,
+          morpho: choice("morpho").dataset.v,
+          ratio: choice("ratio").textContent,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const detail = typeof data.detail === "string" ? data.detail
+          : res.status === 422 ? "Le prompt doit faire entre 3 et 800 caractères." : "La génération a échoué.";
+        throw new Error(detail);
+      }
+      studio.remaining = data.remaining;
+      updateCost();
+      const img = await new Promise((resolve, reject) => {
+        const pre = new Image();
+        pre.onload = () => resolve(data.url);
+        pre.onerror = () => reject(new Error("Impossible d'afficher l'image générée."));
+        pre.src = data.url;
+      });
+      stop();
+      const entry = { img, badge: `${LABEL[mode]} · IA` };
+      showResult(entry);
+      addHistory(entry);
+    } catch (err) {
+      stop();
+      show(hasResult ? "result" : "empty");
+      showError(err.message || "Connexion impossible. Réessaie.");
+    }
+  };
+
+  $("#generate").addEventListener("click", async () => {
+    if (busy) return;
+    busy = true;
+    showError("");
+    show("loading");
+    const btn = $("#generate");
+    btn.disabled = true;
+    try {
+      await (isLive() ? runLive() : runDemo());
+    } finally {
+      busy = false;
+      btn.disabled = false;
+    }
   });
 
   /* ---------- Pricing toggle ---------- */

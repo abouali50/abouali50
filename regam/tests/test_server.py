@@ -1,21 +1,7 @@
 import importlib
-import sys
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-
-@pytest.fixture()
-def client(tmp_path, monkeypatch):
-    monkeypatch.setenv("REGAM_DB", str(tmp_path / "test.db"))
-    monkeypatch.setenv("REGAM_RATE_LIMIT", "100")
-    import server
-
-    importlib.reload(server)
-    return TestClient(server.app)
 
 
 def test_health(client):

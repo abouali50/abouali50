@@ -141,7 +141,7 @@
         <header class="section__head">
           <p class="eyebrow">Studio</p>
           <h2>Essaie-le, là, maintenant.</h2>
-          <p class="muted">Un aperçu de l'interface Regam. Choisis un mode, règle tes paramètres et lance une génération de démonstration.</p>
+          <p class="muted">Choisis un mode, règle tes paramètres et lance une génération. Aucun compte requis.</p>
         </header>
 
         <div class="studio">
@@ -154,20 +154,20 @@
 
             <label class="field">
               <span>Prompt</span>
-              <textarea id="prompt" rows="3">Femme de 28 ans, cheveux bouclés châtains, sourire naturel, lumière dorée de fin de journée, café parisien</textarea>
+              <textarea id="prompt" rows="3" maxlength="800">Femme de 28 ans, cheveux bouclés châtains, sourire naturel, lumière dorée de fin de journée, café parisien</textarea>
             </label>
 
             <div class="field">
               <span>Style</span>
               <div class="choices" data-group="style">
-                <button class="is-on">Photoréaliste</button><button>Éditorial</button><button>Cinéma</button><button>Studio</button>
+                <button class="is-on" data-v="photo">Photoréaliste</button><button data-v="editorial">Éditorial</button><button data-v="cinema">Cinéma</button><button data-v="studio">Studio</button>
               </div>
             </div>
 
             <div class="field" data-only="avatar">
               <span>Morphologie</span>
               <div class="choices" data-group="morpho">
-                <button>Fine</button><button class="is-on">Moyenne</button><button>Athlétique</button><button>Ronde</button>
+                <button data-v="fine">Fine</button><button class="is-on" data-v="moyenne">Moyenne</button><button data-v="athletique">Athlétique</button><button data-v="ronde">Ronde</button>
               </div>
             </div>
 
@@ -192,7 +192,7 @@
             <div class="output" id="output" style="--ratio: 9/16">
               <div class="output__empty" id="outEmpty">
                 <p>Ton rendu apparaîtra ici</p>
-                <small>Démo visuelle — aucune donnée n'est envoyée.</small>
+                <small id="studioMode">Démo visuelle — aucune donnée n'est envoyée.</small>
               </div>
               <div class="output__loading" id="outLoading" hidden>
                 <div class="spinner"></div>
@@ -201,10 +201,12 @@
               </div>
               <div class="output__result portrait" id="outResult" hidden>
                 <svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg>
+                <img id="resultImg" alt="" hidden />
                 <span class="play" id="resultPlay" hidden>▶</span>
                 <span class="badge" id="resultBadge">Avatar · 4K</span>
               </div>
             </div>
+            <p class="studio__error" id="studioError" role="alert" hidden></p>
             <div class="history" id="history" aria-label="Historique"></div>
           </div>
         </div>
