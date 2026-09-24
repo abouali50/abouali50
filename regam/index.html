@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regam — Studio de création IA ultra-réaliste</title>
+  <meta name="description" content="Regam est le studio IA tout-en-un pour créer des avatars, des images 4K, des vidéos animées et du contenu UGC ultra-réaliste en quelques secondes, sans compétence technique." />
+  <meta name="theme-color" content="#0C0C10" />
+  <meta property="og:title" content="Regam — Studio de création IA" />
+  <meta property="og:description" content="Avatars, images 4K, vidéos animées et UGC ultra-réalistes. Tout-en-un, sans compétence technique." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============ NAV ============ -->
+  <header class="nav" id="top">
+    <div class="container nav__inner">
+      <a href="#top" class="logo" aria-label="Regam — accueil">
+        <img src="favicon.svg" alt="" width="32" height="32" />
+        <span>Regam</span>
+      </a>
+      <nav class="nav__links" id="navLinks" aria-label="Navigation principale">
+        <a href="#fonctionnalites">Fonctionnalités</a>
+        <a href="#studio">Studio</a>
+        <a href="#usages">Cas d'usage</a>
+        <a href="#tarifs">Tarifs</a>
+        <a href="#faq">FAQ</a>
+        <a href="#" class="nav__login">Connexion</a>
+      </nav>
+      <div class="nav__cta">
+        <a href="#tarifs" class="btn btn--primary btn--sm">Commencer</a>
+        <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navLinks">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="pill"><span class="dot"></span> Nouveau : Motion Control 2.0 disponible</p>
+          <h1>Crée du contenu <em>ultra-réaliste</em> avec l'IA.</h1>
+          <p class="lead">Avatars, images 4K, vidéos animées et UGC : Regam réunit les meilleurs modèles d'IA dans un seul studio. Aucune compétence technique, des résultats dignes d'un tournage pro.</p>
+          <div class="hero__actions">
+            <a href="#tarifs" class="btn btn--primary">Essayer gratuitement <span aria-hidden="true">→</span></a>
+            <a href="#studio" class="btn btn--ghost">Tester le studio</a>
+          </div>
+          <ul class="hero__proof">
+            <li><strong>50 crédits</strong> offerts</li>
+            <li><strong>Sans</strong> carte bancaire</li>
+            <li><strong>Export</strong> jusqu'en 4K</li>
+          </ul>
+        </div>
+
+        <div class="hero__visual" aria-hidden="true">
+          <div class="card card--a">
+            <div class="portrait portrait--1"><svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg></div>
+            <div class="card__meta"><span class="tag">Avatar</span><span>4K · Photoréaliste</span></div>
+          </div>
+          <div class="card card--b">
+            <div class="portrait portrait--2"><svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg>
+              <span class="play">▶</span>
+              <div class="timeline"><span></span></div>
+            </div>
+            <div class="card__meta"><span class="tag tag--hot">Vidéo</span><span>Image → vidéo · 10 s</span></div>
+          </div>
+          <div class="card card--c">
+            <div class="prompt-mini">
+              <span class="caret">›</span>
+              <span class="typing" id="heroTyping"></span>
+            </div>
+            <div class="bar"><span></span></div>
+            <small>Génération en cours… 78 %</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="marquee" aria-label="Formats pris en charge">
+        <div class="marquee__track">
+          <span>UGC e-commerce</span><span>Reels & Shorts</span><span>Publicités</span><span>Fiches produit</span><span>Formations</span><span>Influenceurs virtuels</span><span>Podcasts vidéo</span><span>Mode & beauté</span>
+          <span>UGC e-commerce</span><span>Reels & Shorts</span><span>Publicités</span><span>Fiches produit</span><span>Formations</span><span>Influenceurs virtuels</span><span>Podcasts vidéo</span><span>Mode & beauté</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES ============ -->
+    <section class="section" id="fonctionnalites">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Fonctionnalités</p>
+          <h2>Un studio complet.<br/>Zéro logiciel à apprendre.</h2>
+          <p class="muted">Tout ce qu'il faut pour produire du contenu visuel qui arrête le scroll, réuni dans une seule interface.</p>
+        </header>
+
+        <div class="bento">
+          <article class="tile tile--wide">
+            <div class="tile__icon">◎</div>
+            <h3>Avatars IA ultra-réalistes</h3>
+            <p>Décris ton personnage : style, morphologie, coiffure, tenue, décor. Regam génère un avatar cohérent, réutilisable sur toutes tes créations.</p>
+            <div class="chips"><span>Style</span><span>Morphologie</span><span>Coiffure</span><span>Tenue</span><span>Décor</span></div>
+          </article>
+          <article class="tile">
+            <div class="tile__icon">▣</div>
+            <h3>Images jusqu'en 4K</h3>
+            <p>Visuels de qualité studio en quelques secondes, styles illimités.</p>
+          </article>
+          <article class="tile">
+            <div class="tile__icon">▶</div>
+            <h3>Image → Vidéo</h3>
+            <p>Anime n'importe quelle image en vidéo fluide et crédible, grâce aux derniers modèles vidéo.</p>
+          </article>
+          <article class="tile">
+            <div class="tile__icon">⤳</div>
+            <h3>Motion Control</h3>
+            <p>Importe une vidéo de référence : ton avatar reproduit chaque geste, pour un rendu cinématographique.</p>
+          </article>
+          <article class="tile">
+            <div class="tile__icon">♫</div>
+            <h3>Voix & lip-sync</h3>
+            <p>Voix off naturelles en 30+ langues, synchronisées aux lèvres de ton avatar.</p>
+          </article>
+          <article class="tile tile--accent">
+            <div class="tile__icon">✦</div>
+            <h3>UGC produit en 1 clic</h3>
+            <p>Ajoute la photo de ton produit : Regam crée une vidéo d'avis façon créateur, prête pour ta boutique et tes pubs.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STUDIO DEMO ============ -->
+    <section class="section section--dark" id="studio">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Studio</p>
+          <h2>Essaie-le, là, maintenant.</h2>
+          <p class="muted">Un aperçu de l'interface Regam. Choisis un mode, règle tes paramètres et lance une génération de démonstration.</p>
+        </header>
+
+        <div class="studio">
+          <aside class="studio__panel">
+            <div class="tabs" role="tablist" aria-label="Mode de génération">
+              <button role="tab" aria-selected="true" data-mode="avatar">Avatar</button>
+              <button role="tab" aria-selected="false" data-mode="image">Image</button>
+              <button role="tab" aria-selected="false" data-mode="video">Vidéo</button>
+            </div>
+
+            <label class="field">
+              <span>Prompt</span>
+              <textarea id="prompt" rows="3">Femme de 28 ans, cheveux bouclés châtains, sourire naturel, lumière dorée de fin de journée, café parisien</textarea>
+            </label>
+
+            <div class="field">
+              <span>Style</span>
+              <div class="choices" data-group="style">
+                <button class="is-on">Photoréaliste</button><button>Éditorial</button><button>Cinéma</button><button>Studio</button>
+              </div>
+            </div>
+
+            <div class="field" data-only="avatar">
+              <span>Morphologie</span>
+              <div class="choices" data-group="morpho">
+                <button>Fine</button><button class="is-on">Moyenne</button><button>Athlétique</button><button>Ronde</button>
+              </div>
+            </div>
+
+            <div class="field" data-only="video" hidden>
+              <span>Durée</span>
+              <div class="choices" data-group="duree">
+                <button class="is-on">5 s</button><button>10 s</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <span>Format</span>
+              <div class="choices" data-group="ratio">
+                <button class="is-on" data-ratio="9/16">9:16</button><button data-ratio="1/1">1:1</button><button data-ratio="16/9">16:9</button>
+              </div>
+            </div>
+
+            <button class="btn btn--primary btn--block" id="generate">Générer <span class="cost" id="cost">· 2 crédits</span></button>
+          </aside>
+
+          <div class="studio__canvas">
+            <div class="output" id="output" style="--ratio: 9/16">
+              <div class="output__empty" id="outEmpty">
+                <p>Ton rendu apparaîtra ici</p>
+                <small>Démo visuelle — aucune donnée n'est envoyée.</small>
+              </div>
+              <div class="output__loading" id="outLoading" hidden>
+                <div class="spinner"></div>
+                <p id="loadingText">Composition de la scène…</p>
+                <div class="bar"><span id="loadingBar"></span></div>
+              </div>
+              <div class="output__result portrait" id="outResult" hidden>
+                <svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg>
+                <span class="play" id="resultPlay" hidden>▶</span>
+                <span class="badge" id="resultBadge">Avatar · 4K</span>
+              </div>
+            </div>
+            <div class="history" id="history" aria-label="Historique"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HOW ============ -->
+    <section class="section" id="comment">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Comment ça marche</p>
+          <h2>De l'idée à la vidéo en 3 étapes.</h2>
+        </header>
+        <ol class="steps">
+          <li>
+            <span class="steps__n">01</span>
+            <h3>Décris</h3>
+            <p>Écris ce que tu imagines ou importe une image, un produit, une vidéo de référence.</p>
+          </li>
+          <li>
+            <span class="steps__n">02</span>
+            <h3>Génère</h3>
+            <p>Regam choisit le meilleur modèle et produit ton contenu en quelques secondes.</p>
+          </li>
+          <li>
+            <span class="steps__n">03</span>
+            <h3>Publie</h3>
+            <p>Exporte en 4K, sans filigrane, au bon format pour chaque réseau social.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ USE CASES ============ -->
+    <section class="section section--dark" id="usages">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Cas d'usage</p>
+          <h2>Pensé pour ceux qui créent vite.</h2>
+        </header>
+        <div class="cases">
+          <article class="case">
+            <div class="case__visual portrait portrait--3"><svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg></div>
+            <h3>E-commerce & dropshipping</h3>
+            <p>Des vidéos UGC pour chaque produit, sans envoyer d'échantillon à des créateurs.</p>
+          </article>
+          <article class="case">
+            <div class="case__visual portrait portrait--4"><svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg></div>
+            <h3>Créateurs & influenceurs</h3>
+            <p>Un influenceur virtuel cohérent qui publie tous les jours, même quand tu dors.</p>
+          </article>
+          <article class="case">
+            <div class="case__visual portrait portrait--5"><svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg></div>
+            <h3>Agences & marques</h3>
+            <p>Teste 20 variantes de pub en une après-midi et garde celles qui convertissent.</p>
+          </article>
+        </div>
+
+        <div class="stats">
+          <div><strong data-count="4">4</strong><span>K</span><p>Résolution max.</p></div>
+          <div><strong data-count="30">30</strong><span>+</span><p>Langues pour la voix</p></div>
+          <div><strong data-count="10">10</strong><span>s</span><p>Pour une image</p></div>
+          <div><strong data-count="100">100</strong><span>%</span><p>Droits d'usage commercial</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PRICING ============ -->
+    <section class="section" id="tarifs">
+      <div class="container">
+        <header class="section__head">
+          <p class="eyebrow">Tarifs</p>
+          <h2>Simple. Transparent. Sans engagement.</h2>
+          <div class="billing" role="group" aria-label="Période de facturation">
+            <button class="is-on" data-billing="month">Mensuel</button>
+            <button data-billing="year">Annuel <span class="save">-20 %</span></button>
+          </div>
+        </header>
+
+        <div class="plans">
+          <article class="plan">
+            <h3>Découverte</h3>
+            <p class="plan__price"><span data-m="0" data-y="0">0</span> €<small>/mois</small></p>
+            <p class="muted">Pour tester sans risque.</p>
+            <ul>
+              <li>50 crédits offerts</li>
+              <li>Images HD</li>
+              <li>1 avatar enregistré</li>
+              <li>Filigrane Regam</li>
+            </ul>
+            <a href="#" class="btn btn--ghost btn--block">Commencer</a>
+          </article>
+          <article class="plan">
+            <h3>Créateur</h3>
+            <p class="plan__price"><span data-m="19" data-y="15">19</span> €<small>/mois</small></p>
+            <p class="muted">Pour publier chaque semaine.</p>
+            <ul>
+              <li>600 crédits / mois</li>
+              <li>Images 4K, sans filigrane</li>
+              <li>Image → vidéo (5 s)</li>
+              <li>5 avatars enregistrés</li>
+            </ul>
+            <a href="#" class="btn btn--ghost btn--block">Choisir Créateur</a>
+          </article>
+          <article class="plan plan--featured">
+            <span class="plan__ribbon">Le plus populaire</span>
+            <h3>Pro</h3>
+            <p class="plan__price"><span data-m="49" data-y="39">49</span> €<small>/mois</small></p>
+            <p class="muted">Pour vendre avec la vidéo.</p>
+            <ul>
+              <li>2 000 crédits / mois</li>
+              <li>Vidéos 10 s + Motion Control</li>
+              <li>Voix & lip-sync</li>
+              <li>UGC produit en 1 clic</li>
+              <li>Avatars illimités</li>
+            </ul>
+            <a href="#" class="btn btn--primary btn--block">Choisir Pro</a>
+          </article>
+          <article class="plan">
+            <h3>Agence</h3>
+            <p class="plan__price"><span data-m="129" data-y="103">129</span> €<small>/mois</small></p>
+            <p class="muted">Pour les équipes et clients.</p>
+            <ul>
+              <li>6 000 crédits / mois</li>
+              <li>File de génération prioritaire</li>
+              <li>5 sièges inclus</li>
+              <li>Support dédié</li>
+            </ul>
+            <a href="#" class="btn btn--ghost btn--block">Contacter l'équipe</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section section--dark" id="faq">
+      <div class="container container--narrow">
+        <header class="section__head">
+          <p class="eyebrow">FAQ</p>
+          <h2>Questions fréquentes</h2>
+        </header>
+        <div class="faq">
+          <details open>
+            <summary>Faut-il des compétences techniques ?</summary>
+            <p>Non. Tu écris ce que tu veux en français, tu choisis quelques options et Regam s'occupe du reste. Aucun réglage complexe, aucun logiciel à installer.</p>
+          </details>
+          <details>
+            <summary>Comment fonctionnent les crédits ?</summary>
+            <p>Chaque génération consomme des crédits selon sa complexité : une image coûte moins qu'une vidéo. Tes crédits se renouvellent chaque mois avec ton abonnement.</p>
+          </details>
+          <details>
+            <summary>Puis-je utiliser mes créations à des fins commerciales ?</summary>
+            <p>Oui, sur tous les forfaits payants : publicités, boutiques en ligne, réseaux sociaux, clients. Tu restes propriétaire de ce que tu crées.</p>
+          </details>
+          <details>
+            <summary>Puis-je créer l'avatar d'une vraie personne ?</summary>
+            <p>Uniquement le tien, ou celui d'une personne qui t'a donné son consentement explicite. Regam interdit l'usurpation d'identité et les contenus trompeurs.</p>
+          </details>
+          <details>
+            <summary>Puis-je annuler à tout moment ?</summary>
+            <p>Oui, en un clic depuis ton espace. Aucun engagement, aucune question.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="cta">
+      <div class="container cta__inner">
+        <h2>Ton prochain contenu viral commence ici.</h2>
+        <p>50 crédits offerts à l'inscription. Sans carte bancaire.</p>
+        <form class="cta__form" id="signup" novalidate>
+          <label class="sr-only" for="email">Adresse e-mail</label>
+          <input id="email" type="email" placeholder="ton@email.com" required autocomplete="email" />
+          <button class="btn btn--dark" type="submit">Créer mon compte</button>
+        </form>
+        <p class="cta__msg" id="signupMsg" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <a href="#top" class="logo"><img src="favicon.svg" alt="" width="28" height="28" /><span>Regam</span></a>
+        <p class="muted">Le studio IA pour créer du contenu ultra-réaliste.</p>
+      </div>
+      <div>
+        <h4>Produit</h4>
+        <a href="#fonctionnalites">Fonctionnalités</a>
+        <a href="#studio">Studio</a>
+        <a href="#tarifs">Tarifs</a>
+      </div>
+      <div>
+        <h4>Ressources</h4>
+        <a href="#faq">FAQ</a>
+        <a href="#">Guides</a>
+        <a href="mailto:contact@regam.ai">Contact</a>
+      </div>
+      <div>
+        <h4>Légal</h4>
+        <a href="#">Mentions légales</a>
+        <a href="#">CGU / CGV</a>
+        <a href="#">Confidentialité</a>
+      </div>
+    </div>
+    <div class="container footer__bottom">
+      <p>© <span id="year"></span> Regam. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <!-- Silhouette SVG réutilisée pour les visuels -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="silhouette" viewBox="0 0 200 240">
+      <path d="M100 38c-24 0-40 18-40 44 0 17 7 31 18 39l-2 12c-34 7-58 26-64 56-2 9-3 22-3 51h182c0-29-1-42-3-51-6-30-30-49-64-56l-2-12c11-8 18-22 18-39 0-26-16-44-40-44z" />
+    </symbol>
+  </svg>
+
+  <script src="app.js"></script>
+</body>
+</html>
