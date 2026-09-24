@@ -106,18 +106,65 @@
     $$(".plan__price span").forEach((s) => { s.textContent = s.dataset[key]; });
   }));
 
+  /* ---------- Plan selection → signup form ---------- */
+  const PLAN_NAMES = { decouverte: "Découverte", createur: "Créateur", pro: "Pro" };
+  $$("[data-plan]").forEach((a) => a.addEventListener("click", () => {
+    const plan = a.dataset.plan;
+    $("#plan").value = plan;
+    const label = $("#planLabel");
+    label.textContent = `Forfait choisi : ${PLAN_NAMES[plan]}`;
+    label.hidden = false;
+    setTimeout(() => $("#email").focus({ preventScroll: true }), 600);
+  }));
+
   /* ---------- Signup form ---------- */
-  $("#signup").addEventListener("submit", (e) => {
+  const form = $("#signup");
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = $("#email");
     const msg = $("#signupMsg");
-    if (!input.checkValidity() || !input.value) {
-      msg.textContent = "Entre une adresse e-mail valide.";
+    const btn = $("#signupBtn");
+    const say = (text, isError = false) => {
+      msg.textContent = text;
+      msg.classList.toggle("is-error", isError);
+    };
+
+    if (!input.value || !input.checkValidity()) {
+      say("Entre une adresse e-mail valide.", true);
       input.focus();
       return;
     }
-    msg.textContent = "C'est noté ! Tes 50 crédits t'attendent dans ta boîte mail.";
-    input.value = "";
+
+    btn.disabled = true;
+    say("Envoi…");
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: input.value.trim(),
+          plan: $("#plan").value,
+          website: form.elements.website.value,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        say(data.already
+          ? "Tu es déjà inscrit·e avec cette adresse : on te recontacte très vite."
+          : "C'est noté ! On t'envoie tes 50 crédits dès l'ouverture de ton compte.");
+        input.value = "";
+      } else if (res.status === 429) {
+        say("Trop de tentatives. Réessaie dans une minute.", true);
+      } else if (res.status === 422) {
+        say("Cette adresse e-mail ne semble pas valide.", true);
+      } else {
+        say("Les inscriptions ouvrent très bientôt. Écris-nous à contact@regam.ai en attendant.", true);
+      }
+    } catch {
+      say("Connexion impossible. Vérifie ton réseau et réessaie.", true);
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   /* ---------- Reveal on scroll + counters ---------- */

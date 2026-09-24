@@ -29,10 +29,9 @@
         <a href="#usages">Cas d'usage</a>
         <a href="#tarifs">Tarifs</a>
         <a href="#faq">FAQ</a>
-        <a href="#" class="nav__login">Connexion</a>
       </nav>
       <div class="nav__cta">
-        <a href="#tarifs" class="btn btn--primary btn--sm">Commencer</a>
+        <a href="#inscription" class="btn btn--primary btn--sm">Commencer</a>
         <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navLinks">
           <span></span><span></span>
         </button>
@@ -50,7 +49,7 @@
           <h1>Crée du contenu <em>ultra-réaliste</em> avec l'IA.</h1>
           <p class="lead">Avatars, images 4K, vidéos animées et UGC : Regam réunit les meilleurs modèles d'IA dans un seul studio. Aucune compétence technique, des résultats dignes d'un tournage pro.</p>
           <div class="hero__actions">
-            <a href="#tarifs" class="btn btn--primary">Essayer gratuitement <span aria-hidden="true">→</span></a>
+            <a href="#inscription" class="btn btn--primary">Essayer gratuitement <span aria-hidden="true">→</span></a>
             <a href="#studio" class="btn btn--ghost">Tester le studio</a>
           </div>
           <ul class="hero__proof">
@@ -296,7 +295,7 @@
               <li>1 avatar enregistré</li>
               <li>Filigrane Regam</li>
             </ul>
-            <a href="#" class="btn btn--ghost btn--block">Commencer</a>
+            <a href="#inscription" data-plan="decouverte" class="btn btn--ghost btn--block">Commencer</a>
           </article>
           <article class="plan">
             <h3>Créateur</h3>
@@ -308,7 +307,7 @@
               <li>Image → vidéo (5 s)</li>
               <li>5 avatars enregistrés</li>
             </ul>
-            <a href="#" class="btn btn--ghost btn--block">Choisir Créateur</a>
+            <a href="#inscription" data-plan="createur" class="btn btn--ghost btn--block">Choisir Créateur</a>
           </article>
           <article class="plan plan--featured">
             <span class="plan__ribbon">Le plus populaire</span>
@@ -322,7 +321,7 @@
               <li>UGC produit en 1 clic</li>
               <li>Avatars illimités</li>
             </ul>
-            <a href="#" class="btn btn--primary btn--block">Choisir Pro</a>
+            <a href="#inscription" data-plan="pro" class="btn btn--primary btn--block">Choisir Pro</a>
           </article>
           <article class="plan">
             <h3>Agence</h3>
@@ -334,7 +333,7 @@
               <li>5 sièges inclus</li>
               <li>Support dédié</li>
             </ul>
-            <a href="#" class="btn btn--ghost btn--block">Contacter l'équipe</a>
+            <a href="mailto:contact@regam.ai?subject=Offre%20Agence" class="btn btn--ghost btn--block">Contacter l'équipe</a>
           </article>
         </div>
       </div>
@@ -373,16 +372,21 @@
     </section>
 
     <!-- ============ CTA ============ -->
-    <section class="cta">
+    <section class="cta" id="inscription">
       <div class="container cta__inner">
         <h2>Ton prochain contenu viral commence ici.</h2>
         <p>50 crédits offerts à l'inscription. Sans carte bancaire.</p>
         <form class="cta__form" id="signup" novalidate>
           <label class="sr-only" for="email">Adresse e-mail</label>
-          <input id="email" type="email" placeholder="ton@email.com" required autocomplete="email" />
-          <button class="btn btn--dark" type="submit">Créer mon compte</button>
+          <input id="email" name="email" type="email" placeholder="ton@email.com" required autocomplete="email" maxlength="254" />
+          <input type="hidden" name="plan" id="plan" value="decouverte" />
+          <!-- Pot de miel anti-robots : laissé vide par les humains -->
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <button class="btn btn--dark" type="submit" id="signupBtn">Créer mon compte</button>
         </form>
+        <p class="cta__plan" id="planLabel" hidden></p>
         <p class="cta__msg" id="signupMsg" role="status" aria-live="polite"></p>
+        <p class="cta__legal">En t'inscrivant, tu acceptes nos <a href="cgu.html">CGU</a> et notre <a href="confidentialite.html">politique de confidentialité</a>.</p>
       </div>
     </section>
   </main>
@@ -403,14 +407,13 @@
       <div>
         <h4>Ressources</h4>
         <a href="#faq">FAQ</a>
-        <a href="#">Guides</a>
         <a href="mailto:contact@regam.ai">Contact</a>
       </div>
       <div>
         <h4>Légal</h4>
-        <a href="#">Mentions légales</a>
-        <a href="#">CGU / CGV</a>
-        <a href="#">Confidentialité</a>
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="cgu.html">CGU / CGV</a>
+        <a href="confidentialite.html">Confidentialité</a>
       </div>
     </div>
     <div class="container footer__bottom">

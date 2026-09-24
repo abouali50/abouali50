@@ -312,3 +312,29 @@ textarea:focus { outline: none; border-color: var(--lime); }
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------- Signup extras ---------- */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.cta__plan { font-size: 14px; font-weight: 600; padding: 4px 12px; border-radius: 999px; background: rgba(12,12,16,.12); }
+.cta__plan[hidden] { display: none; }
+.cta__msg.is-error { color: #7A1400; font-weight: 600; }
+.cta__legal { font-size: 12px; opacity: .75; }
+.cta__legal a { text-decoration: underline; }
+.cta__form button[disabled] { opacity: .6; cursor: progress; transform: none; }
+
+/* ---------- Legal / simple pages ---------- */
+.page { padding: 72px 0 120px; }
+.page h1 { font-size: clamp(30px, 4.5vw, 48px); font-weight: 800; margin-bottom: 12px; }
+.page .updated { color: var(--muted); font-size: 14px; margin-bottom: 48px; }
+.page h2 { font-size: 20px; margin: 40px 0 12px; }
+.page p, .page li { color: #C9C7CF; }
+.page p + p { margin-top: 12px; }
+.page ul { padding-left: 20px; display: grid; gap: 6px; }
+.page a:not(.btn) { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
+.page table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; }
+.page th, .page td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.page th { color: var(--text); font-weight: 600; }
+.todo { background: rgba(255,106,61,.16); color: var(--coral); padding: 1px 6px; border-radius: 6px; font-weight: 600; }
+.notfound { min-height: 70vh; display: grid; place-items: center; text-align: center; }
+.notfound strong { font-family: var(--display); font-size: clamp(96px, 20vw, 200px); line-height: 1; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.notfound p { color: var(--muted); margin: 12px 0 28px; }

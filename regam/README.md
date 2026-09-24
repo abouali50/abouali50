@@ -1,33 +1,60 @@
-# Regam — site vitrine
+# Regam
 
-Landing page de **Regam**, studio IA pour créer avatars, images 4K, vidéos animées et UGC ultra-réalistes.
+Site de **Regam**, studio IA pour créer avatars, images 4K, vidéos animées et UGC ultra-réalistes.
 
-Site 100 % statique (HTML/CSS/JS, aucune dépendance, aucun build).
+- `public/` : le site (HTML/CSS/JS, sans build)
+- `server.py` : serveur FastAPI qui sert le site et enregistre les inscriptions (SQLite)
 
 ## Lancer en local
 
 ```bash
 cd regam
-python3 -m http.server 8080
-# puis ouvrir http://localhost:8080
+pip install -r requirements.txt
+uvicorn server:app --reload --port 8080
+# → http://localhost:8080
 ```
 
-## Structure
+## API
 
-| Fichier       | Rôle                                                           |
-|---------------|----------------------------------------------------------------|
-| `index.html`  | Contenu : hero, fonctionnalités, studio démo, étapes, cas d'usage, tarifs, FAQ, CTA, footer |
-| `styles.css`  | Design (tokens de couleurs en haut du fichier, responsive, animations) |
-| `app.js`      | Menu mobile, prompt animé, studio démo, bascule mensuel/annuel, formulaire, animations au scroll |
-| `favicon.svg` | Logo « R » Regam                                               |
+| Méthode | Route          | Rôle |
+|---------|----------------|------|
+| GET     | `/api/health`  | Vérifie que le serveur tourne |
+| POST    | `/api/signup`  | `{"email": "...", "plan": "decouverte" \| "createur" \| "pro"}` → `201` (nouvelle inscription) ou `200` avec `already: true` |
 
-## Personnaliser
+Protections : validation de l'e-mail, doublons ignorés (insensible à la casse), champ « pot de miel » anti-robots, limite de 5 requêtes/minute par IP (`REGAM_RATE_LIMIT`).
 
-- **Couleurs** : variables `--lime`, `--coral`, `--violet`, `--ink` dans `:root` (`styles.css`).
-- **Tarifs** : attributs `data-m` (mensuel) / `data-y` (annuel) sur chaque prix.
-- **Inscription** : le formulaire est une démo côté client — brancher `#signup` sur votre backend / outil d'e-mailing.
-- **Visuels** : les portraits sont des dégradés + silhouette SVG ; remplacez-les par vos propres rendus IA.
+**Exporter les inscrits** :
+
+```bash
+python server.py export > inscriptions.csv
+```
+
+La base est stockée dans `data/regam.db` (modifiable via `REGAM_DB`), ignorée par git.
+
+## Tests
+
+```bash
+pip install pytest httpx
+python -m pytest tests
+```
 
 ## Déploiement
 
-Glissez le dossier `regam/` sur Netlify, Vercel, GitHub Pages ou Cloudflare Pages.
+**Docker** (Render, Railway, Fly.io, un VPS…) :
+
+```bash
+docker build -t regam .
+docker run -p 8080:8080 -v regam-data:/data regam
+```
+
+**Hébergement statique seul** (Netlify, Vercel, GitHub Pages) : publiez le dossier `public/`. Le site fonctionne, mais sans serveur, le formulaire affiche « Les inscriptions ouvrent très bientôt ».
+
+## Avant la mise en ligne
+
+- Compléter les champs marqués **[à compléter]** dans `mentions-legales.html`, `cgu.html` et `confidentialite.html` (société, hébergeur, SIREN, médiateur…). Faites-les relire par un·e juriste.
+- Remplacer `contact@regam.ai` par votre vraie adresse.
+- Ajuster les tarifs (`data-m` / `data-y`) et les chiffres clés dans `index.html`.
+
+## Personnaliser le design
+
+Couleurs dans `:root` de `public/styles.css` : `--lime`, `--coral`, `--violet`, `--ink`. Polices : Unbounded (titres) et Inter (texte).
