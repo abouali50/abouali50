@@ -53,6 +53,8 @@
   let mode = "avatar";
   let busy = false;
   let hasResult = false;
+  let animateSource = null; // { id, url } : image à animer en mode Vidéo
+  let lastEntry = null;
 
   const choice = (group) => $(`.choices[data-group=${group}] .is-on`);
   const costOf = () => (mode === "video" ? (choice("duree").textContent.startsWith("10") ? 16 : 8) : COST[mode]);
@@ -103,6 +105,13 @@
       studio.remaining = data.remaining;
       $("#studioMode").innerHTML = '<span class="live">Studio connecté</span> · générations réelles';
       setUser(data.user);
+      const wanted = Number(new URLSearchParams(location.search).get("animer"));
+      if (wanted && canVideo()) {
+        fetch("/api/me/generations").then((r) => (r.ok ? r.json() : [])).then((items) => {
+          const g = items.find((it) => it.id === wanted && it.status === "done" && it.mode !== "video");
+          if (g) animate({ id: g.id, url: g.url });
+        }).catch(() => {});
+      }
     })
     .catch(() => {});
 
@@ -111,8 +120,39 @@
     mode = tab.dataset.mode;
     tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
     $$("[data-only]").forEach((el) => { el.hidden = el.dataset.only !== mode; });
+    renderSource();
     updateStudioInfo();
   }));
+
+  /* Image → vidéo */
+  const selectTab = (name) => $(`.tabs [data-mode=${name}]`).click();
+  const renderSource = () => {
+    const chip = $("#sourceChip");
+    const animating = !!animateSource && mode === "video";
+    chip.hidden = !animating;
+    // L'image de départ fixe déjà le style et le format.
+    ["style", "ratio"].forEach((g) => { $(`.choices[data-group=${g}]`).closest(".field").hidden = animating; });
+    if (animateSource) $("#sourceImg").src = animateSource.url;
+    $("#prompt").placeholder = animateSource && mode === "video"
+      ? "Décris le mouvement : elle sourit, la caméra avance lentement…"
+      : "";
+  };
+  const animate = (source) => {
+    animateSource = source;
+    selectTab("video");
+    const prompt = $("#prompt");
+    prompt.value = "";
+    renderSource();
+    prompt.focus({ preventScroll: true });
+    $("#studio").scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  $("#sourceClear").addEventListener("click", () => {
+    animateSource = null;
+    renderSource();
+  });
+  $("#animateBtn").addEventListener("click", () => {
+    if (lastEntry?.id) animate({ id: lastEntry.id, url: lastEntry.img });
+  });
 
   $$(".choices").forEach((group) => {
     group.addEventListener("click", (e) => {
@@ -146,7 +186,7 @@
     return () => { stopped = true; bar.style.width = "100%"; };
   };
 
-  const showResult = ({ palette = "", img = null, video = null, badge }) => {
+  const showResult = ({ palette = "", img = null, video = null, badge, id = null }) => {
     const res = out.result;
     res.className = `output__result portrait ${palette}`.trim();
     const image = $("#resultImg");
@@ -179,6 +219,8 @@
     }
     $("#resultBadge").textContent = badge;
     $("#resultPlay").hidden = mode !== "video" || !!media;
+    lastEntry = { img, id };
+    $("#animateBtn").hidden = !(img && id && canVideo());
     hasResult = true;
     show("result");
   };
@@ -255,6 +297,7 @@
         morpho: choice("morpho").dataset.v,
         ratio: choice("ratio").textContent,
         duration: choice("duree").textContent.startsWith("10") ? "10" : "5",
+        source_id: isVideo && animateSource ? animateSource.id : undefined,
       });
       if (typeof data.remaining === "number") studio.remaining = data.remaining;
       if (typeof data.credits === "number" && studio.user) setUser({ ...studio.user, credits: data.credits });
@@ -263,9 +306,9 @@
       let entry;
       if (isVideo) {
         const url = await preload(await waitForVideo(data.id), "video");
-        entry = { video: url, badge: `Vidéo · ${choice("duree").textContent} · IA` };
+        entry = { video: url, badge: `Vidéo · ${choice("duree").textContent} · IA${animateSource ? " · animée" : ""}` };
       } else {
-        entry = { img: await preload(data.url, "img"), badge: `${LABEL[mode]} · IA` };
+        entry = { img: await preload(data.url, "img"), badge: `${LABEL[mode]} · IA`, id: data.id };
       }
       stop();
       showResult(entry);

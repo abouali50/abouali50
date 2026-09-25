@@ -195,6 +195,19 @@ def refund(conn, user_id: int, gen_id: int, amount: int) -> None:
     db.add_credits(conn, user_id, amount, "refund", ref=f"refund:{gen_id}")
 
 
+def source_image(user_id: int, gen_id: int) -> str:
+    """URL d'une image (ou d'un avatar) réussie appartenant à l'utilisateur."""
+    with closing(db.connect()) as conn:
+        row = conn.execute(
+            """SELECT url FROM generations WHERE id = ? AND user_id = ? AND status = 'done'
+               AND mode IN ('image', 'avatar') AND url IS NOT NULL""",
+            (gen_id, user_id),
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Image de départ introuvable.")
+    return row["url"]
+
+
 def check_video_access(user, req: generate.GenerateIn) -> None:
     if user is None:
         raise HTTPException(status_code=401, detail="Connecte-toi pour créer des vidéos.")
@@ -212,8 +225,13 @@ def generate_endpoint(payload: generate.GenerateIn, request: Request) -> dict:
     if rate_limited(f"gen:{ip}"):
         raise HTTPException(status_code=429, detail="Trop de tentatives. Patiente une minute.")
     user = auth.current_user(request)
+    source_url = None
     if payload.mode == "video":
         check_video_access(user, payload)
+        if payload.source_id:
+            source_url = source_image(user["id"], payload.source_id)
+    elif payload.source_id:
+        raise HTTPException(status_code=422, detail="Seule une vidéo peut partir d'une image.")
 
     # --- réserve : crédits (compte) ou essai gratuit (visiteur)
     cost = payload.cost if user else 0
@@ -236,7 +254,7 @@ def generate_endpoint(payload: generate.GenerateIn, request: Request) -> dict:
     # --- appel au modèle (hors transaction : peut prendre du temps)
     try:
         if payload.mode == "video":
-            job = generate.submit_video(payload)
+            job = generate.submit_video(payload, image_url=source_url)
         else:
             image = generate.generate_image(payload)
     except generate.GenerationError as exc:

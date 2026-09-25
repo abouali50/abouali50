@@ -134,6 +134,13 @@
         }
         link.append(media);
         fig.append(link);
+        if (g.mode !== "video" && user.plan !== "decouverte") {
+          const anim = document.createElement("a");
+          anim.className = "gallery__animate";
+          anim.href = `/?animer=${g.id}#studio`;
+          anim.textContent = "Animer →";
+          fig.append(anim);
+        }
       } else {
         const ph = document.createElement("div");
         ph.className = "gallery__ph";

@@ -41,6 +41,8 @@ REGAM_DEV=1 uvicorn server:app --reload --port 8080
 
 Les crédits sont cumulables et conservés après résiliation. Changer de forfait passe par l'espace client Stripe (« Gérer mon abonnement ») : pas de double abonnement, et une montée en gamme ne crédite que la différence.
 
+**Image → vidéo.** Après une image ou un avatar, « Animer cette image » passe en mode Vidéo avec l'image comme point de départ (aussi depuis la galerie de la page compte). Seules les créations de l'utilisateur peuvent être animées : jamais une URL ou une photo importée.
+
 **Mode démo.** Sans `FAL_KEY`, ou si `public/` est hébergé seul, le studio affiche une animation de démonstration.
 
 ## Configuration (variables d'environnement)
@@ -68,7 +70,8 @@ Les crédits sont cumulables et conservés après résiliation. Changer de forfa
 |----------|------|
 | `FAL_KEY` | Clé API ([fal.ai/dashboard/keys](https://fal.ai/dashboard/keys)) |
 | `REGAM_FAL_MODEL` | Modèle image, défaut `fal-ai/flux/schnell` (~0,003 $/image) |
-| `REGAM_FAL_VIDEO_MODEL` | Modèle vidéo, défaut `fal-ai/kling-video/v1.6/standard/text-to-video`. **Vérifiez l'identifiant et le prix actuels sur fal.ai** avant la mise en ligne. |
+| `REGAM_FAL_VIDEO_MODEL` | Modèle texte → vidéo, défaut `fal-ai/kling-video/v1.6/standard/text-to-video` |
+| `REGAM_FAL_I2V_MODEL` | Modèle image → vidéo, défaut `fal-ai/kling-video/v1.6/standard/image-to-video`. **Vérifiez les identifiants et prix actuels des modèles vidéo sur fal.ai** avant la mise en ligne. |
 | `REGAM_GEN_PER_IP_DAY` | Essais gratuits par visiteur et par jour (défaut 5) |
 | `REGAM_GEN_DAILY_CAP` | Plafond global d'essais gratuits par jour (défaut 200) |
 

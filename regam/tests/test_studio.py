@@ -190,7 +190,7 @@ def test_video_access_rules(live):
 def test_video_job_lifecycle(live, monkeypatch):
     login(live)
     set_plan("lea@example.com", "pro", credits=100)
-    monkeypatch.setattr(generate, "submit_video", lambda req: {"status_url": "s", "response_url": "r"})
+    monkeypatch.setattr(generate, "submit_video", lambda req, image_url=None: {"status_url": "s", "response_url": "r"})
     polls = iter([None, "https://cdn/v.mp4"])
     monkeypatch.setattr(generate, "poll_video", lambda s, r: next(polls))
 
@@ -209,7 +209,7 @@ def test_video_job_lifecycle(live, monkeypatch):
 def test_failed_video_is_refunded_once(live, monkeypatch):
     login(live)
     set_plan("lea@example.com", "createur", credits=20)
-    monkeypatch.setattr(generate, "submit_video", lambda req: {"status_url": "s", "response_url": "r"})
+    monkeypatch.setattr(generate, "submit_video", lambda req, image_url=None: {"status_url": "s", "response_url": "r"})
 
     def fail(s, r):
         raise generate.GenerationError("La vidéo a échoué.")
@@ -225,8 +225,60 @@ def test_failed_video_is_refunded_once(live, monkeypatch):
 def test_jobs_are_private(live, monkeypatch):
     login(live, "a@example.com")
     set_plan("a@example.com", "pro")
-    monkeypatch.setattr(generate, "submit_video", lambda req: {"status_url": "s", "response_url": "r"})
+    monkeypatch.setattr(generate, "submit_video", lambda req, image_url=None: {"status_url": "s", "response_url": "r"})
     job = live.post("/api/generate", json={"prompt": "une vidéo", "mode": "video"}).json()
     live.post("/api/auth/logout", json={})
     login(live, "b@example.com")
     assert live.get(f"/api/jobs/{job['id']}").status_code == 404
+
+
+# ---------------------------------------------------------------- image → vidéo
+
+def test_i2v_submit_uses_image_model_and_motion_prompt(monkeypatch):
+    monkeypatch.setenv("FAL_KEY", "k")
+    seen = {}
+
+    def handler(request):
+        seen.update(url=str(request.url), body=request.read())
+        return httpx.Response(200, json={"status_url": "s", "response_url": "r"})
+
+    req = generate.GenerateIn(prompt="elle sourit et tourne la tête", mode="video", source_id=3)
+    generate.submit_video(req, fal_client(handler), image_url="https://cdn/a.png")
+    assert seen["url"] == "https://queue.fal.run/fal-ai/kling-video/v1.6/standard/image-to-video"
+    body = seen["body"].decode()
+    assert '"image_url":"https://cdn/a.png"' in body and "aspect_ratio" not in body
+    assert "elle sourit" in body and "Portrait of a fictional" not in body
+
+
+def test_animate_own_image(live, monkeypatch):
+    login(live)
+    set_plan("lea@example.com", "createur", credits=100)
+    submitted = {}
+    monkeypatch.setattr(generate, "submit_video", lambda req, image_url=None: submitted.update(url=image_url) or {"status_url": "s", "response_url": "r"})
+    img = live.post("/api/generate", json={"prompt": "un avatar", "mode": "avatar"}).json()
+    r = live.post("/api/generate", json={"prompt": "elle sourit", "mode": "video", "source_id": img["id"]})
+    assert r.status_code == 200 and r.json()["status"] == "pending"
+    assert submitted["url"] == IMG["url"]
+
+
+def test_cannot_animate_someone_elses_image_or_a_video(live, monkeypatch):
+    monkeypatch.setattr(generate, "submit_video", lambda req, image_url=None: {"status_url": "s", "response_url": "r"})
+    login(live, "a@example.com")
+    set_plan("a@example.com", "pro", credits=100)
+    img = live.post("/api/generate", json={"prompt": "une image"}).json()
+    vid = live.post("/api/generate", json={"prompt": "une vidéo", "mode": "video"}).json()
+    r = live.post("/api/generate", json={"prompt": "anime", "mode": "video", "source_id": vid["id"]})
+    assert r.status_code == 404
+    live.post("/api/auth/logout", json={})
+
+    login(live, "b@example.com")
+    set_plan("b@example.com", "pro", credits=100)
+    r = live.post("/api/generate", json={"prompt": "anime", "mode": "video", "source_id": img["id"]})
+    assert r.status_code == 404
+    assert live.get("/api/me").json()["credits"] == 100  # rien débité
+
+
+def test_source_id_only_for_video(live):
+    login(live)
+    r = live.post("/api/generate", json={"prompt": "une image", "source_id": 1})
+    assert r.status_code == 422

@@ -7,6 +7,7 @@ Variables d'environnement :
   FAL_KEY                  clé API fal.ai (https://fal.ai/dashboard/keys)
   REGAM_FAL_MODEL          modèle image (défaut : fal-ai/flux/schnell)
   REGAM_FAL_VIDEO_MODEL    modèle vidéo texte→vidéo (défaut : fal-ai/kling-video/v1.6/standard/text-to-video)
+  REGAM_FAL_I2V_MODEL      modèle vidéo image→vidéo (défaut : fal-ai/kling-video/v1.6/standard/image-to-video)
   REGAM_GEN_PER_IP_DAY     générations max par IP et par jour (défaut : 5)
   REGAM_GEN_DAILY_CAP      générations max par jour, tous visiteurs (défaut : 200)
 """
@@ -48,6 +49,9 @@ class GenerateIn(BaseModel):
     morpho: Morpho = "moyenne"
     ratio: Ratio = "9:16"
     duration: Duration = "5"
+    # Vidéo à partir d'une image : id d'une génération (image ou avatar) de
+    # l'utilisateur. Jamais une URL libre : on n'anime que ses propres créations.
+    source_id: int | None = Field(default=None, ge=1)
 
     @property
     def cost(self) -> int:
@@ -75,6 +79,9 @@ def daily_cap() -> int:
 
 
 def build_prompt(req: GenerateIn) -> str:
+    if req.mode == "video" and req.source_id:
+        # Image → vidéo : l'image fixe déjà le sujet et le style, le prompt décrit le mouvement.
+        return f"{req.prompt.strip()}, natural fluid motion, cinematic camera movement"
     parts = []
     if req.mode == "avatar":
         # Toujours une personne fictive : pas de ressemblance avec des personnes réelles.
@@ -136,14 +143,18 @@ def _fal(method: str, url: str, client: httpx.Client | None, **kwargs) -> httpx.
             client.close()
 
 
-def submit_video(req: GenerateIn, client: httpx.Client | None = None) -> dict:
-    """Met la vidéo en file d'attente. Renvoie {"status_url", "response_url"}."""
-    model = os.environ.get("REGAM_FAL_VIDEO_MODEL", "fal-ai/kling-video/v1.6/standard/text-to-video")
-    body = {
-        "prompt": build_prompt(req),
-        "duration": req.duration,
-        "aspect_ratio": req.ratio,
-    }
+def submit_video(req: GenerateIn, client: httpx.Client | None = None, image_url: str | None = None) -> dict:
+    """Met la vidéo en file d'attente. Renvoie {"status_url", "response_url"}.
+
+    Avec `image_url`, anime cette image (le format suit celui de l'image).
+    """
+    body = {"prompt": build_prompt(req), "duration": req.duration}
+    if image_url:
+        model = os.environ.get("REGAM_FAL_I2V_MODEL", "fal-ai/kling-video/v1.6/standard/image-to-video")
+        body["image_url"] = image_url
+    else:
+        model = os.environ.get("REGAM_FAL_VIDEO_MODEL", "fal-ai/kling-video/v1.6/standard/text-to-video")
+        body["aspect_ratio"] = req.ratio
     res = _fal("POST", f"https://queue.fal.run/{model}", client, json=body)
     if res.status_code == 422:
         raise GenerationError("Ce prompt a été refusé par le modèle. Reformule-le.", 422)

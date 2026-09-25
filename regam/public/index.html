@@ -172,6 +172,12 @@
               </div>
             </div>
 
+            <div class="source-chip" id="sourceChip" hidden>
+              <img alt="" id="sourceImg" />
+              <div><b>Image de départ</b><small>Décris le mouvement dans le prompt</small></div>
+              <button type="button" id="sourceClear" aria-label="Retirer l'image de départ">✕</button>
+            </div>
+
             <div class="field" data-only="video" hidden>
               <span>Durée</span>
               <div class="choices" data-group="duree">
@@ -207,6 +213,7 @@
                 <video id="resultVideo" muted loop playsinline controls hidden></video>
                 <span class="play" id="resultPlay" hidden>▶</span>
                 <span class="badge" id="resultBadge">Avatar · 4K</span>
+                <button type="button" class="animate-btn" id="animateBtn" hidden>Animer cette image →</button>
               </div>
             </div>
             <p class="studio__error" id="studioError" role="alert" hidden></p>

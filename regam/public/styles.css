@@ -409,3 +409,18 @@ textarea:focus { outline: none; border-color: var(--lime); }
 .nav__links .nav__account { color: var(--lime); }
 .soon { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--muted); margin-left: 4px; vertical-align: 1px; }
 .history video { width: 44px; height: auto; flex: none; aspect-ratio: 4/5; object-fit: cover; border-radius: 8px; border: 1px solid var(--line-2); cursor: pointer; }
+
+/* ---------- Image → vidéo ---------- */
+.source-chip { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 12px; padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(212,255,58,.35); background: rgba(212,255,58,.06); }
+.source-chip[hidden] { display: none; }
+.source-chip img { width: 48px; height: 60px; object-fit: cover; border-radius: 8px; }
+.source-chip b { display: block; font-size: 13px; }
+.source-chip small { color: var(--muted); font-size: 12px; }
+.source-chip button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-2); background: none; color: var(--muted); }
+.source-chip button:hover { color: var(--text); border-color: var(--text); }
+.animate-btn { position: absolute; z-index: 3; left: 50%; bottom: 16px; translate: -50% 0; padding: 10px 18px; border-radius: 999px; border: 0; background: var(--lime); color: var(--ink); font-weight: 700; font-size: 14px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.6); white-space: nowrap; }
+.animate-btn[hidden] { display: none; }
+.gallery__item { position: relative; }
+.gallery__animate { position: absolute; top: 8px; right: 8px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--lime); color: var(--ink); opacity: 0; transition: opacity .2s; }
+.gallery__item:hover .gallery__animate, .gallery__animate:focus-visible { opacity: 1; }
+@media (hover: none) { .gallery__animate { opacity: 1; } }
