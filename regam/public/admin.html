@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Administration — Regam</title>
+  <meta name="theme-color" content="#0C0C10" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav__inner">
+      <a href="/" class="logo" aria-label="Regam — accueil"><img src="/favicon.svg" alt="" width="32" height="32" /><span>Regam</span> <span class="admin-tag">admin</span></a>
+      <a href="/compte.html" class="btn btn--ghost btn--sm">Mon compte</a>
+    </div>
+  </header>
+
+  <main class="account container">
+    <section id="viewLoading" class="account__center"><div class="spinner"></div></section>
+
+    <section id="viewDenied" class="account__center" hidden>
+      <div class="auth-card">
+        <h1>Accès réservé</h1>
+        <p class="muted" id="deniedMsg">Cette page est réservée à l'équipe Regam.</p>
+        <a href="/compte.html" class="btn btn--primary btn--block">Se connecter</a>
+      </div>
+    </section>
+
+    <section id="viewAdmin" hidden>
+      <header class="dash__head">
+        <div>
+          <p class="eyebrow">Administration</p>
+          <h1>Vue d'ensemble</h1>
+        </div>
+        <button class="btn btn--ghost btn--sm" id="refreshBtn">Actualiser</button>
+      </header>
+
+      <div class="kpis">
+        <div class="kpi kpi--hero">
+          <span>Revenu mensuel estimé</span>
+          <strong id="kMrr">–</strong>
+          <small id="kMrrNote"></small>
+        </div>
+        <div class="kpi">
+          <span>Utilisateurs</span>
+          <strong id="kUsers">–</strong>
+          <small id="kUsersNote"></small>
+        </div>
+        <div class="kpi">
+          <span>Abonnés payants</span>
+          <strong id="kPaying">–</strong>
+          <small id="kPayingNote"></small>
+        </div>
+        <div class="kpi">
+          <span>Coût IA estimé · 30 j</span>
+          <strong id="kCost">–</strong>
+          <small id="kCostNote"></small>
+        </div>
+      </div>
+
+      <section class="dash__section">
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <div>
+              <h2>Générations par jour</h2>
+              <p class="muted" id="chartSub">30 derniers jours · images, avatars et vidéos réussis</p>
+            </div>
+            <p class="chart-total" id="chartTotal"></p>
+          </div>
+          <div class="chart" id="chart" role="img" aria-describedby="chartSub"></div>
+          <div class="chart-tip" id="chartTip" hidden></div>
+          <details class="chart-table">
+            <summary>Voir les données en tableau</summary>
+            <table><thead><tr><th>Date</th><th>Générations</th><th>Nouveaux comptes</th></tr></thead><tbody id="dailyRows"></tbody></table>
+          </details>
+        </div>
+      </section>
+
+      <section class="dash__section admin-cols">
+        <div>
+          <h2>Derniers comptes</h2>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>E-mail</th><th>Forfait</th><th class="num">Crédits</th><th class="num">Créations</th><th>Inscription</th></tr></thead>
+              <tbody id="usersRows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h2>Ajuster des crédits</h2>
+          <form class="admin-form" id="creditForm" novalidate>
+            <label for="cEmail">E-mail du compte</label>
+            <input id="cEmail" type="email" required autocomplete="off" placeholder="client@exemple.fr" />
+            <label for="cAmount">Crédits (négatif pour retirer)</label>
+            <input id="cAmount" type="number" required step="1" placeholder="50" />
+            <label for="cNote">Motif</label>
+            <input id="cNote" type="text" maxlength="120" placeholder="Geste commercial, remboursement…" />
+            <button class="btn btn--primary btn--block" type="submit">Appliquer</button>
+            <p class="form-msg" id="creditMsg" role="status" aria-live="polite"></p>
+          </form>
+          <div class="mini-stats" id="miniStats"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>

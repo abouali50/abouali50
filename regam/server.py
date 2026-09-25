@@ -23,6 +23,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, Field
 
+import admin
 import auth
 import billing
 import db
@@ -411,6 +412,9 @@ async def stripe_webhook(request: Request) -> dict:
 
 
 # ---------------------------------------------------------------- fin
+
+app.include_router(admin.router)
+
 
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 def api_not_found(path: str) -> None:

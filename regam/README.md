@@ -11,6 +11,7 @@ Studio IA pour créer avatars, images et vidéos : site vitrine, comptes, crédi
 | `mailer.py` | E-mails (SMTP) |
 | `billing.py` | Abonnements Stripe (Checkout, espace client, webhooks) |
 | `generate.py` | Images (FLUX) et vidéos (Kling) via fal.ai |
+| `admin.py` | Tableau de bord d'administration (`/admin.html`) |
 
 ## Lancer en local
 
@@ -94,6 +95,16 @@ Les crédits sont cumulables et conservés après résiliation. Changer de forfa
 
 Tester en local avec la CLI Stripe : `stripe listen --forward-to localhost:8080/api/stripe/webhook`.
 
+### Administration
+
+| Variable | Rôle |
+|----------|------|
+| `REGAM_ADMIN_EMAILS` | Adresses autorisées sur `/admin.html`, séparées par des virgules (connexion normale par lien magique) |
+| `REGAM_COST_IMAGE_USD` | Coût estimé d'une image/avatar chez fal.ai (défaut 0.003) |
+| `REGAM_COST_VIDEO5_USD` / `REGAM_COST_VIDEO10_USD` | Coût estimé d'une vidéo de 5 s / 10 s (défaut 0.30 / 0.60) : **mettez vos vrais tarifs** |
+
+Le tableau de bord affiche : revenu mensuel estimé, utilisateurs (nouveaux, non activés), abonnés par forfait, coût IA estimé sur 30 jours, générations par jour (graphique + tableau), derniers comptes, et un formulaire pour **ajouter ou retirer des crédits** à un client (chaque ajustement est tracé dans le journal avec l'adresse de l'admin et le motif).
+
 ### Derrière un proxy / PaaS
 
 Les quotas par IP ont besoin de la vraie IP du visiteur : lancez uvicorn avec `--proxy-headers --forwarded-allow-ips='*'` **uniquement** si le serveur n'est joignable qu'à travers ce proxy.
@@ -112,6 +123,8 @@ Les quotas par IP ont besoin de la vraie IP du visiteur : lancez uvicorn avec `-
 | GET | `/api/billing` | Formules disponibles |
 | POST | `/api/billing/checkout` · `/api/billing/portal` | Redirection vers Stripe |
 | POST | `/api/stripe/webhook` | Événements Stripe (signature vérifiée) |
+| GET | `/api/admin/stats` | Statistiques (admins uniquement) |
+| POST | `/api/admin/credits` | `{email, amount, note}` : ajuster un solde (admins uniquement) |
 
 Toutes les requêtes POST authentifiées exigent `Content-Type: application/json` (protection CSRF).
 
