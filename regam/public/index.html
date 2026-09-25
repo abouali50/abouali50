@@ -29,6 +29,7 @@
         <a href="#usages">Cas d'usage</a>
         <a href="#tarifs">Tarifs</a>
         <a href="#faq">FAQ</a>
+        <a href="/compte.html" class="nav__account" id="navAccount">Connexion</a>
       </nav>
       <div class="nav__cta">
         <a href="#inscription" class="btn btn--primary btn--sm">Commencer</a>
@@ -186,6 +187,7 @@
             </div>
 
             <button class="btn btn--primary btn--block" id="generate">Générer <span class="cost" id="cost">· 2 crédits</span></button>
+            <p class="studio__account" id="studioAccount" hidden></p>
           </aside>
 
           <div class="studio__canvas">
@@ -202,6 +204,7 @@
               <div class="output__result portrait" id="outResult" hidden>
                 <svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax meet"><use href="#silhouette"/></svg>
                 <img id="resultImg" alt="" hidden />
+                <video id="resultVideo" muted loop playsinline controls hidden></video>
                 <span class="play" id="resultPlay" hidden>▶</span>
                 <span class="badge" id="resultBadge">Avatar · 4K</span>
               </div>
@@ -293,11 +296,10 @@
             <p class="muted">Pour tester sans risque.</p>
             <ul>
               <li>50 crédits offerts</li>
-              <li>Images HD</li>
-              <li>1 avatar enregistré</li>
-              <li>Filigrane Regam</li>
+              <li>Images & avatars IA</li>
+              <li>Historique de tes créations</li>
             </ul>
-            <a href="#inscription" data-plan="decouverte" class="btn btn--ghost btn--block">Commencer</a>
+            <a href="#inscription" class="btn btn--ghost btn--block">Commencer</a>
           </article>
           <article class="plan">
             <h3>Créateur</h3>
@@ -305,11 +307,11 @@
             <p class="muted">Pour publier chaque semaine.</p>
             <ul>
               <li>600 crédits / mois</li>
-              <li>Images 4K, sans filigrane</li>
-              <li>Image → vidéo (5 s)</li>
-              <li>5 avatars enregistrés</li>
+              <li>Images & avatars IA</li>
+              <li>Vidéos IA de 5 s</li>
+              <li>Crédits cumulables</li>
             </ul>
-            <a href="#inscription" data-plan="createur" class="btn btn--ghost btn--block">Choisir Créateur</a>
+            <a href="/compte.html?plan=createur" class="btn btn--ghost btn--block">Choisir Créateur</a>
           </article>
           <article class="plan plan--featured">
             <span class="plan__ribbon">Le plus populaire</span>
@@ -318,12 +320,12 @@
             <p class="muted">Pour vendre avec la vidéo.</p>
             <ul>
               <li>2 000 crédits / mois</li>
-              <li>Vidéos 10 s + Motion Control</li>
-              <li>Voix & lip-sync</li>
-              <li>UGC produit en 1 clic</li>
-              <li>Avatars illimités</li>
+              <li>Vidéos IA de 5 s et 10 s</li>
+              <li>Motion Control <span class="soon">bientôt</span></li>
+              <li>Voix & lip-sync <span class="soon">bientôt</span></li>
+              <li>UGC produit en 1 clic <span class="soon">bientôt</span></li>
             </ul>
-            <a href="#inscription" data-plan="pro" class="btn btn--primary btn--block">Choisir Pro</a>
+            <a href="/compte.html?plan=pro" class="btn btn--primary btn--block">Choisir Pro</a>
           </article>
           <article class="plan">
             <h3>Agence</h3>
@@ -381,13 +383,11 @@
         <form class="cta__form" id="signup" novalidate>
           <label class="sr-only" for="email">Adresse e-mail</label>
           <input id="email" name="email" type="email" placeholder="ton@email.com" required autocomplete="email" maxlength="254" />
-          <input type="hidden" name="plan" id="plan" value="decouverte" />
           <!-- Pot de miel anti-robots : laissé vide par les humains -->
           <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <button class="btn btn--dark" type="submit" id="signupBtn">Créer mon compte</button>
         </form>
-        <p class="cta__plan" id="planLabel" hidden></p>
-        <p class="cta__msg" id="signupMsg" role="status" aria-live="polite"></p>
+                <p class="cta__msg" id="signupMsg" role="status" aria-live="polite"></p>
         <p class="cta__legal">En t'inscrivant, tu acceptes nos <a href="cgu.html">CGU</a> et notre <a href="confidentialite.html">politique de confidentialité</a>.</p>
       </div>
     </section>

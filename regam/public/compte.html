@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mon compte — Regam</title>
+  <meta name="theme-color" content="#0C0C10" />
+  <meta name="robots" content="noindex" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav__inner">
+      <a href="/" class="logo" aria-label="Regam — accueil"><img src="/favicon.svg" alt="" width="32" height="32" /><span>Regam</span></a>
+      <a href="/#studio" class="btn btn--primary btn--sm">Ouvrir le studio</a>
+    </div>
+  </header>
+
+  <main class="account container">
+    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+
+    <!-- ============ Chargement ============ -->
+    <section id="viewLoading" class="account__center"><div class="spinner"></div></section>
+
+    <!-- ============ Connexion ============ -->
+    <section id="viewLogin" class="account__center" hidden>
+      <div class="auth-card">
+        <h1>Connexion</h1>
+        <p class="muted">Pas de mot de passe : on t'envoie un lien magique par e-mail. Nouveau&nbsp;? Ton compte est créé automatiquement, avec <strong>50 crédits offerts</strong>.</p>
+        <p class="plan-intent" id="planIntent" hidden></p>
+        <form id="loginForm" novalidate>
+          <label for="loginEmail">Adresse e-mail</label>
+          <input id="loginEmail" name="email" type="email" placeholder="ton@email.com" required autocomplete="email" maxlength="254" />
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <button class="btn btn--primary btn--block" type="submit" id="loginBtn">Recevoir mon lien</button>
+        </form>
+        <p class="form-msg" id="loginMsg" role="status" aria-live="polite"></p>
+        <p class="muted small">En continuant, tu acceptes nos <a href="/cgu.html">CGU</a> et notre <a href="/confidentialite.html">politique de confidentialité</a>.</p>
+      </div>
+    </section>
+
+    <!-- ============ Tableau de bord ============ -->
+    <section id="viewDash" hidden>
+      <header class="dash__head">
+        <div>
+          <p class="eyebrow">Mon compte</p>
+          <h1 id="dashEmail"></h1>
+        </div>
+        <div class="dash__actions">
+          <button class="btn btn--ghost btn--sm" id="portalBtn" hidden>Gérer mon abonnement</button>
+          <button class="btn btn--ghost btn--sm" id="logoutBtn">Se déconnecter</button>
+        </div>
+      </header>
+
+      <div class="dash__stats">
+        <div class="stat-card stat-card--accent">
+          <span>Crédits disponibles</span>
+          <strong id="dashCredits">–</strong>
+          <a href="/#studio" class="btn btn--dark btn--sm">Créer maintenant →</a>
+        </div>
+        <div class="stat-card">
+          <span>Forfait</span>
+          <strong id="dashPlan">–</strong>
+          <small class="muted" id="dashPlanNote"></small>
+        </div>
+        <div class="stat-card">
+          <span>Coûts</span>
+          <ul class="costs">
+            <li>Image <b>1</b></li><li>Avatar <b>2</b></li><li>Vidéo 5 s <b>8</b></li><li>Vidéo 10 s <b>16</b></li>
+          </ul>
+        </div>
+      </div>
+
+      <section class="dash__section" id="upgrade">
+        <div class="dash__section-head">
+          <h2>Changer de forfait</h2>
+          <div class="billing" role="group" aria-label="Période de facturation">
+            <button class="is-on" data-billing="month">Mensuel</button>
+            <button data-billing="year">Annuel <span class="save">-20 %</span></button>
+          </div>
+        </div>
+        <div class="upgrade-grid">
+          <article class="plan" data-plan-card="createur">
+            <h3>Créateur</h3>
+            <p class="plan__price"><span data-m="19" data-y="15">19</span> €<small>/mois</small></p>
+            <ul><li>600 crédits / mois</li><li>Vidéos IA de 5 s</li><li>Crédits cumulables</li></ul>
+            <button class="btn btn--ghost btn--block" data-checkout="createur">Choisir Créateur</button>
+          </article>
+          <article class="plan plan--featured" data-plan-card="pro">
+            <span class="plan__ribbon">Le plus populaire</span>
+            <h3>Pro</h3>
+            <p class="plan__price"><span data-m="49" data-y="39">49</span> €<small>/mois</small></p>
+            <ul><li>2 000 crédits / mois</li><li>Vidéos IA de 5 s et 10 s</li><li>Motion Control, voix & lip-sync <span class="soon">bientôt</span></li></ul>
+            <button class="btn btn--primary btn--block" data-checkout="pro">Choisir Pro</button>
+          </article>
+        </div>
+        <p class="form-msg" id="billingMsg" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="dash__section">
+        <h2>Mes créations</h2>
+        <div class="gallery" id="gallery"></div>
+        <p class="muted" id="galleryEmpty" hidden>Rien pour l'instant. <a href="/#studio">Lance ta première création →</a></p>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__bottom" style="margin-top:0;border-top:0;padding-top:0;display:flex;flex-wrap:wrap;gap:8px 24px;">
+      <p>© 2026 Regam</p>
+      <a href="/mentions-legales.html">Mentions légales</a>
+      <a href="/cgu.html">CGU / CGV</a>
+      <a href="/confidentialite.html">Confidentialité</a>
+      <a href="mailto:contact@regam.ai">Contact</a>
+    </div>
+  </footer>
+
+  <script src="/compte.js"></script>
+</body>
+</html>

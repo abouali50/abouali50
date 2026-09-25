@@ -2,7 +2,7 @@ FROM python:3.12-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY server.py mailer.py generate.py ./
+COPY *.py ./
 COPY public ./public
 ENV REGAM_DB=/data/regam.db
 VOLUME ["/data"]

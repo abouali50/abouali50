@@ -1,61 +1,80 @@
 import importlib
 
-import pytest
 from fastapi.testclient import TestClient
+
+from conftest import login
 
 
 def test_health(client):
     assert client.get("/api/health").json() == {"status": "ok"}
 
 
-def test_signup_then_duplicate_is_case_insensitive(client):
-    r = client.post("/api/signup", json={"email": "Lea@Example.com", "plan": "pro"})
-    assert r.status_code == 201
-    assert r.json() == {"ok": True, "already": False}
-
-    r = client.post("/api/signup", json={"email": "lea@example.com"})
-    assert r.status_code == 200
-    assert r.json()["already"] is True
-
-
-@pytest.mark.parametrize("body", [
-    {"email": "pas-un-email"},
-    {"email": "a@b.co", "plan": "inconnu"},
-    {},
-])
-def test_signup_rejects_invalid_input(client, body):
-    assert client.post("/api/signup", json=body).status_code == 422
+def test_static_pages_and_404(client):
+    assert "Regam" in client.get("/").text
+    for page in ("compte.html", "mentions-legales.html", "cgu.html", "confidentialite.html"):
+        assert client.get(f"/{page}").status_code == 200
+    r = client.get("/nexiste-pas")
+    assert r.status_code == 404 and "404" in r.text
+    r = client.get("/api/nope")
+    assert r.status_code == 404 and r.headers["content-type"].startswith("application/json")
 
 
-def test_honeypot_is_accepted_but_not_stored(client):
-    r = client.post("/api/signup", json={"email": "bot@example.com", "website": "spam"})
-    assert r.status_code == 201
-    # Not stored: a real signup with the same address is new.
-    r = client.post("/api/signup", json={"email": "bot@example.com"})
-    assert r.json()["already"] is False
+def test_server_source_not_served(client):
+    for path in ("/server.py", "/db.py", "/data/regam.db"):
+        assert client.get(path).status_code == 404
 
 
 def test_rate_limit(tmp_path, monkeypatch):
     monkeypatch.setenv("REGAM_DB", str(tmp_path / "rl.db"))
     monkeypatch.setenv("REGAM_RATE_LIMIT", "2")
+    monkeypatch.setenv("REGAM_DEV", "1")
     import server
 
     importlib.reload(server)
     c = TestClient(server.app)
-    codes = [c.post("/api/signup", json={"email": f"u{i}@example.com"}).status_code for i in range(3)]
-    assert codes == [201, 201, 429]
+    codes = [c.post("/api/auth/request", json={"email": f"u{i}@example.com"}).status_code for i in range(3)]
+    assert codes == [200, 200, 429]
 
 
-def test_static_pages_and_404(client):
-    assert "Regam" in client.get("/").text
-    for page in ("mentions-legales.html", "cgu.html", "confidentialite.html"):
-        assert client.get(f"/{page}").status_code == 200
-    r = client.get("/nexiste-pas")
-    assert r.status_code == 404
-    assert "404" in r.text
-    assert client.get("/api/nope").status_code == 404
-    assert client.get("/api/nope").headers["content-type"].startswith("application/json")
+def test_export(client, capsys, monkeypatch):
+    import runpy
+    import sys
+
+    c = client
+    monkeypatch.setenv("REGAM_DEV", "1")
+    login(c, "a@example.com")
+    c.post("/api/auth/request", json={"email": "b@example.com", "plan": "pro"})
+    monkeypatch.setattr(sys, "argv", ["server.py", "export"])
+    runpy.run_module("server", run_name="__main__")
+    out = capsys.readouterr().out.splitlines()
+    assert out[0] == "email,forfait,inscrit_le,compte_active,credits"
+    assert out[1].startswith("a@example.com,decouverte,") and out[1].endswith(",oui,50")
+    assert out[2].startswith("b@example.com,pro,") and out[2].endswith(",non,")
 
 
-def test_server_source_not_served(client):
-    assert client.get("/server.py").status_code == 404
+def test_migrates_first_version_database(tmp_path, monkeypatch):
+    import sqlite3
+
+    import db
+
+    path = tmp_path / "v1.db"
+    old = sqlite3.connect(path)
+    old.executescript("""
+        CREATE TABLE signups (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE,
+                              plan TEXT NOT NULL, created_at TEXT NOT NULL);
+        CREATE TABLE generations (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT NOT NULL, mode TEXT NOT NULL,
+                                  prompt TEXT NOT NULL, url TEXT NOT NULL, created_at TEXT NOT NULL);
+        CREATE INDEX generations_day ON generations (created_at);
+        INSERT INTO signups (email, plan, created_at) VALUES ('a@b.co', 'pro', 't');
+        INSERT INTO generations (ip, mode, prompt, url, created_at) VALUES ('1.2.3.4', 'image', 'p', 'u', 't');
+    """)
+    old.commit()
+    old.close()
+
+    monkeypatch.setenv("REGAM_DB", str(path))
+    db.init()
+    db.init()  # idempotent
+    conn = db.connect()
+    assert [tuple(r) for r in conn.execute("SELECT ip, url, status, cost FROM generations")] == [("1.2.3.4", "u", "done", 0)]
+    conn.execute("INSERT INTO generations (ip, mode, prompt, status, created_at) VALUES ('x', 'video', 'p', 'pending', 't')")
+    assert conn.execute("SELECT COUNT(*) FROM signups").fetchone()[0] == 1
