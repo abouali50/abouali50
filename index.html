@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="استمارة طلب الانخراط في مشروع طنجة غرين ريزيدنس السكني.">
+<meta property="og:title" content="طنجة غرين ريزيدنس | استمارة الانخراط">
+<meta property="og:description" content="سجّل دابا فمشروع طنجة غرين ريزيدنس. عمّر الاستمارة فـ 3 دقايق.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#071634">
+<title>طنجة غرين ريزيدنس | استمارة الانخراط</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap">
+<style>
+body{margin:0}
+/* Layout: book-cover style hero (navy, giant white/yellow type, gold seal, glowing scene + step list, yellow brush banner), then a bright white form card. One committed look. */
+:root{
+  color-scheme:dark;
+  --navy:#071634; --navy2:#0c2a63; --glow:#2f8cff; --yellow:#ffd21f; --yellow2:#ffb800; --white:#ffffff;
+  --sheet:#ffffff; --ink:#0b1f3f; --muted:#51607a; --line:#d6dff0; --field:#f4f7fd;
+  --pine:#12b76a; --ok:#0a8f55; --err:#d92d20; --gold:#ffb800;
+  --f-display:"Noto Kufi Arabic","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+  --f-latin:"Montserrat","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--navy);background-image:radial-gradient(1200px 700px at 50% -10%,#123a86 0,#071634 60%);color:var(--white);font-family:var(--f-body);font-size:18px;line-height:1.65}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 56px}
+
+.cover{position:relative;border-radius:28px;overflow:hidden;padding:30px 24px 24px;background:radial-gradient(600px 380px at 50% 62%,rgba(47,140,255,.35),transparent 70%),linear-gradient(180deg,#0b2556 0,#081a40 55%,#06132f 100%);box-shadow:0 30px 60px -30px #000,inset 0 0 0 1px rgba(120,170,255,.18);display:grid;gap:18px}
+.seal{position:absolute;top:18px;left:18px;width:108px;height:108px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a6,var(--yellow) 45%,var(--yellow2) 100%);color:#2a1d00;display:grid;place-content:center;text-align:center;font-family:var(--f-display);font-weight:900;font-size:15px;line-height:1.25;box-shadow:0 0 0 5px rgba(255,210,31,.35),0 10px 24px -8px rgba(0,0,0,.6);transform:rotate(-8deg)}
+.seal::before{content:"";position:absolute;inset:7px;border-radius:50%;border:2px dashed rgba(42,29,0,.45)}
+.seal small{display:block;font-size:13px}
+.kicker{display:flex;align-items:center;gap:12px;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:clamp(18px,4.6vw,24px)}
+.kicker::before,.kicker::after{content:"";height:5px;width:clamp(28px,10vw,70px);background:var(--yellow);border-radius:3px}
+h1{margin:0;text-align:center;font-family:var(--f-display);font-weight:900;line-height:1.08;display:grid;gap:4px;text-shadow:0 6px 24px rgba(0,0,0,.45)}
+h1 .l1,h1 .l3{font-size:clamp(46px,13vw,92px);color:var(--white)}
+h1 .l2{font-size:clamp(70px,21vw,150px);color:var(--yellow);line-height:1;text-shadow:0 0 30px rgba(255,210,31,.35),0 8px 0 #b58a00}
+.latin{text-align:center;font-family:var(--f-latin);font-weight:800;letter-spacing:.3em;font-size:clamp(12px,3.4vw,17px);direction:ltr;color:#bcd6ff}
+.tag{text-align:center;margin:0;font-family:var(--f-display);font-weight:800;font-size:clamp(20px,5.2vw,28px);line-height:1.5}
+.tag em{font-style:normal;color:var(--yellow)}
+.media{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:center}
+.scene{border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(120,170,255,.25),0 0 40px rgba(47,140,255,.35)}
+.scene svg{display:block;width:100%;height:auto;max-width:100%}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.steps li{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:center;min-width:0}
+.ic{width:52px;height:52px;border-radius:14px;display:grid;place-content:center;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 6px 16px -6px rgba(0,0,0,.6)}
+.ic svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ic.b{background:linear-gradient(160deg,#4aa3ff,#1565e0)} .ic.p{background:linear-gradient(160deg,#a774ff,#6a2cf0)} .ic.g{background:linear-gradient(160deg,#3ddc84,#0f9d58)} .ic.o{background:linear-gradient(160deg,#ffb74a,#f57c00)}
+.steps b{display:block;font-family:var(--f-display);font-weight:800;font-size:17px;line-height:1.35}
+.steps span{display:block;font-size:14.5px;color:#c4d4f2;line-height:1.4}
+.brush{position:relative;margin:4px -6px 0;padding:14px 20px;text-align:center;font-family:var(--f-display);font-weight:900;font-size:clamp(20px,5.4vw,30px);color:#0b1f3f;background:var(--yellow);clip-path:polygon(1% 12%,8% 0,30% 6%,55% 0,80% 7%,99% 2%,100% 60%,98% 100%,70% 92%,45% 100%,20% 93%,0 100%,2% 55%);line-height:1.35}
+.foot{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.02em;color:#dbe7ff}
+.foot i{font-style:normal;color:var(--yellow)}
+
+form,.panel{background:var(--sheet);color:var(--ink);border-radius:24px;padding:26px;margin-top:22px;display:grid;gap:28px;box-shadow:0 24px 50px -28px #000}
+.formhead{display:flex;align-items:center;gap:12px;font-family:var(--f-display);font-weight:900;font-size:24px;margin:0}
+.formhead::before{content:"";width:8px;height:32px;border-radius:4px;background:var(--yellow)}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:12px;min-width:0}
+label.q,legend.q{font-family:var(--f-display);font-weight:800;font-size:20px;padding:0;display:flex;gap:8px;align-items:baseline;color:var(--ink)}
+.req{color:var(--err);font-size:16px}
+.hint{color:var(--muted);font-size:15px;margin:-6px 0 0}
+input[type=text],input[type=tel],textarea{width:100%;font:inherit;font-size:19px;color:var(--ink);background:var(--field);border:2px solid var(--line);border-radius:16px;padding:15px 18px;transition:border-color .15s}
+input[type=text]:hover,input[type=tel]:hover,textarea:hover{border-color:#9db8e6}
+input[type=tel]{direction:ltr;text-align:right}
+textarea{min-height:110px;resize:vertical}
+input:focus-visible,textarea:focus-visible,.chip input:focus-visible+span,.star:focus-visible,button:focus-visible{outline:3px solid var(--glow);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;margin:0}
+.chip span{display:inline-flex;align-items:center;gap:6px;padding:12px 20px;border:2px solid var(--line);border-radius:999px;cursor:pointer;background:var(--field);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);transition:background .15s,border-color .15s}
+.chip span:hover{border-color:var(--navy2)}
+.chip input:checked+span{background:var(--navy2);border-color:var(--navy2);color:#fff;box-shadow:0 8px 18px -10px var(--navy2)}
+.money{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.money .chip span{display:flex;flex-direction:column;align-items:flex-start;border-radius:20px;padding:18px 20px;width:100%}
+.money b{font-family:var(--f-latin);font-size:30px;font-weight:800;direction:ltr;line-height:1.2}
+.money small{font-size:16px;opacity:.85}
+.money .chip input:checked+span b{color:var(--yellow)}
+.stars{display:flex;gap:6px;direction:rtl}
+.star{background:none;border:0;padding:2px 4px;cursor:pointer;font-size:42px;line-height:1;color:#d5deee;transition:transform .12s}
+.star:hover{transform:scale(1.12)}
+.star.on{color:var(--gold)}
+.starlabel{color:var(--muted);font-size:17px;font-weight:600}
+.err{color:var(--err);font-size:15px;margin:0;font-weight:600}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+button.primary{font:inherit;font-family:var(--f-display);font-weight:900;background:var(--yellow);color:#0b1f3f;border:0;border-radius:18px;padding:18px 28px;cursor:pointer;font-size:23px;width:100%;box-shadow:inset 0 -5px 0 #d9a800,0 16px 30px -16px #b58a00}
+button.ghost{font:inherit;font-weight:600;background:var(--field);color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:12px 18px;cursor:pointer;font-size:16px}
+button:disabled{opacity:.6;cursor:default}
+.done{border:3px solid var(--ok)}
+.done{text-align:center;justify-items:center;padding-block:40px}
+.done.okstate::before{content:"✓";display:grid;place-content:center;width:84px;height:84px;border-radius:50%;background:var(--ok);color:#fff;font-size:46px;font-weight:900;box-shadow:0 0 0 10px #d9f4e6}
+.done h2{font-family:var(--f-display);color:var(--ok);margin:0;font-size:clamp(30px,8vw,40px);font-weight:900}
+.done #doneText{font-size:21px;font-weight:600;max-width:32ch;line-height:1.7}
+.done.failstate{border-color:var(--err)}.done.failstate h2{color:var(--err)}
+pre.summary{white-space:pre-wrap;background:var(--field);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0;font-family:var(--f-body);font-size:17px;user-select:all;color:var(--ink)}
+.panel h2{font-family:var(--f-display);font-size:22px;margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.count{font-family:var(--f-body);font-size:15px;background:#e8eefb;color:var(--navy2);border-radius:999px;padding:3px 12px;font-variant-numeric:tabular-nums}
+.stats{display:flex;flex-wrap:wrap;gap:8px;font-size:15px;color:var(--muted)}
+.stats span{background:#e8eefb;border-radius:10px;padding:5px 12px}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:820px}
+th,td{text-align:right;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:700;color:var(--muted);font-size:13.5px;background:var(--field)}
+td.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:16px;margin:0}
+footer{color:#9fb4dc;font-size:14px;text-align:center;margin-top:20px}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+.tw{animation:twinkle 3s ease-in-out infinite}
+@media (max-width:560px){
+  .media{grid-template-columns:1fr}
+  .seal{width:84px;height:84px;font-size:12px;top:12px;left:12px}.seal small{font-size:11px}
+  .cover{padding:26px 16px 20px}
+  form,.panel{padding:20px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <header class="cover">
+    <div class="seal" aria-hidden="true"><div>التسجيل<br>مفتوح<small>★</small></div></div>
+    <div class="kicker">مشروع سكني</div>
+    <h1><span class="l1">طنجة</span><span class="l2">غرين</span><span class="l3">ريزيدنس</span></h1>
+    <div class="latin">TANGER GREEN RESIDENCE</div>
+    <p class="tag">استمارة طلب الانخراط<br><em>عمّرها فـ 3 دقايق</em></p>
+
+    <div class="media">
+      <div class="scene" aria-hidden="true">
+        <svg viewBox="0 0 520 400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="nsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#06143a"/><stop offset=".6" stop-color="#0f3a8a"/><stop offset="1" stop-color="#3f7fe0"/></linearGradient>
+            <linearGradient id="nsea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d3f8f"/><stop offset="1" stop-color="#051a45"/></linearGradient>
+            <linearGradient id="tw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f8ff"/><stop offset=".55" stop-color="#d6e4fb"/><stop offset="1" stop-color="#9fb8e2"/></linearGradient>
+            <linearGradient id="tw2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9d9f5"/><stop offset="1" stop-color="#7d97c6"/></linearGradient>
+            <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#ffb84a"/></linearGradient>
+            <linearGradient id="glassB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd3ff"/><stop offset="1" stop-color="#2f8cff"/></linearGradient>
+            <radialGradient id="moon"><stop offset="0" stop-color="#fffbe8"/><stop offset=".5" stop-color="#ffe9a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a0" stop-opacity="0"/></radialGradient>
+            <radialGradient id="halo"><stop offset="0" stop-color="#5fb0ff" stop-opacity=".7"/><stop offset="1" stop-color="#5fb0ff" stop-opacity="0"/></radialGradient>
+            <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+            <filter id="blur2"><feGaussianBlur stdDeviation="2"/></filter>
+            <pattern id="wy" width="22" height="20" patternUnits="userSpaceOnUse"><rect x="3" y="4" width="16" height="11" rx="1.5" fill="url(#glass)"/></pattern>
+            <pattern id="wb" width="22" height="20" patternUnits="userSpaceOnUse"><rect x="3" y="4" width="16" height="11" rx="1.5" fill="url(#glassB)" opacity=".9"/></pattern>
+            <pattern id="bal" width="44" height="20" patternUnits="userSpaceOnUse"><rect x="0" y="15" width="44" height="3" fill="#ffffff" opacity=".9"/><circle cx="8" cy="13" r="3.5" fill="#20c070"/><circle cx="36" cy="13" r="3" fill="#2ed27e"/></pattern>
+          </defs>
+          <rect width="520" height="400" fill="url(#nsky)"/>
+          <g fill="#ffffff">
+            <circle class="tw" cx="40" cy="40" r="1.6"/><circle class="tw" cx="120" cy="22" r="1.2" style="animation-delay:.8s"/><circle cx="200" cy="54" r="1"/><circle class="tw" cx="300" cy="30" r="1.4" style="animation-delay:1.6s"/><circle cx="470" cy="70" r="1.2"/><circle class="tw" cx="90" cy="96" r="1" style="animation-delay:2.2s"/><circle cx="250" cy="14" r="1.1"/>
+          </g>
+          <circle cx="430" cy="62" r="70" fill="url(#moon)"/>
+          <circle cx="430" cy="62" r="20" fill="#fff7d6"/>
+          <ellipse cx="260" cy="250" rx="240" ry="120" fill="url(#halo)"/>
+          <!-- far city -->
+          <path d="M0 262 V236 h18 v-12 h14 v18 h20 v-30 h10 v-8 h6 v8 h10 v40 h22 v-22 h16 v14 h30 v26 Z" fill="#0a2a66"/>
+          <path d="M392 262 v-30 h20 v-18 h12 v-14 l6 -10 l6 10 v14 h12 v20 h24 v-10 h22 v38 Z" fill="#0a2a66"/>
+          <g fill="#ffd56b" opacity=".75"><rect x="24" y="232" width="3" height="3"/><rect x="58" y="226" width="3" height="3"/><rect x="104" y="246" width="3" height="3"/><rect x="420" y="222" width="3" height="3"/><rect x="452" y="236" width="3" height="3"/></g>
+          <!-- sea -->
+          <rect x="0" y="262" width="520" height="138" fill="url(#nsea)"/>
+          <g stroke="#7fc0ff" stroke-linecap="round" opacity=".55"><path d="M20 290h60M120 304h40M380 296h80M300 318h50M60 340h90" stroke-width="2"/></g>
+          <path d="M430 270 l-10 120 h20 z" fill="#ffe9a0" opacity=".18" filter="url(#blur2)"/>
+          <!-- main tower -->
+          <g>
+            <rect x="196" y="96" width="132" height="226" rx="4" fill="url(#tw)"/>
+            <rect x="204" y="108" width="116" height="206" fill="url(#wy)"/>
+            <rect x="196" y="108" width="132" height="210" fill="url(#bal)"/>
+            <rect x="188" y="86" width="148" height="14" rx="4" fill="#0f9d58"/>
+            <g fill="#21c26f"><circle cx="200" cy="82" r="9"/><circle cx="222" cy="78" r="12"/><circle cx="300" cy="80" r="10"/><circle cx="322" cy="82" r="8"/></g>
+            <rect x="244" y="282" width="36" height="40" rx="3" fill="#ffd56b"/>
+          </g>
+          <!-- side blocks -->
+          <g>
+            <rect x="96" y="168" width="96" height="154" rx="4" fill="url(#tw2)"/>
+            <rect x="102" y="178" width="84" height="138" fill="url(#wb)"/>
+            <rect x="96" y="178" width="96" height="140" fill="url(#bal)" opacity=".85"/>
+            <rect x="90" y="160" width="108" height="11" rx="3" fill="#0f9d58"/>
+            <rect x="332" y="150" width="104" height="172" rx="4" fill="url(#tw2)"/>
+            <rect x="338" y="160" width="92" height="156" fill="url(#wy)" opacity=".9"/>
+            <rect x="332" y="160" width="104" height="158" fill="url(#bal)" opacity=".85"/>
+            <rect x="326" y="142" width="116" height="11" rx="3" fill="#0f9d58"/>
+          </g>
+          <!-- reflections -->
+          <g opacity=".28" filter="url(#blur6)"><rect x="200" y="326" width="124" height="60" fill="#ffc861"/><rect x="100" y="326" width="88" height="40" fill="#6fb8ff"/><rect x="336" y="326" width="96" height="44" fill="#ffc861"/></g>
+          <!-- promenade + palms -->
+          <rect x="0" y="320" width="520" height="10" fill="#0b2b63"/>
+          <g fill="#ffe08a"><circle cx="70" cy="306" r="3"/><circle cx="160" cy="306" r="3"/><circle cx="360" cy="306" r="3"/><circle cx="460" cy="306" r="3"/></g>
+          <g stroke="#0b2b63" stroke-width="2"><path d="M70 309v12M160 309v12M360 309v12M460 309v12"/></g>
+          <g>
+            <path d="M46 322 q4 -50 -2 -84" stroke="#3b2a1a" stroke-width="6" fill="none"/>
+            <g fill="#17a85d"><path d="M44 238 q-34 -6 -46 18 q22 -14 46 -18z"/><path d="M44 238 q34 -10 50 12 q-26 -10 -50 -12z"/><path d="M44 238 q-14 -30 -40 -30 q24 8 40 30z"/><path d="M44 238 q16 -30 44 -26 q-28 6 -44 26z"/></g>
+            <path d="M488 322 q-4 -56 4 -92" stroke="#3b2a1a" stroke-width="6" fill="none"/>
+            <g fill="#17a85d"><path d="M492 230 q34 -4 44 20 q-20 -14 -44 -20z"/><path d="M492 230 q-34 -8 -50 14 q26 -10 50 -14z"/><path d="M492 230 q12 -30 40 -30 q-24 8 -40 30z"/><path d="M492 230 q-16 -30 -44 -24 q28 6 44 24z"/></g>
+          </g>
+          <rect x="0" y="0" width="520" height="400" fill="none" stroke="#5fb0ff" stroke-opacity=".35" stroke-width="2"/>
+        </svg>
+      </div>
+      <ol class="steps">
+        <li><span class="ic b"><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></span><div><b>عمّر الاستمارة</b><span>معلوماتك فدقايق قليلة</span></div></li>
+        <li><span class="ic p"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></span><div><b>نتاصلو بيك</b><span>فريقنا كيعيط ليك</span></div></li>
+        <li><span class="ic g"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span><div><b>التفاصيل والأقساط</b><span>الشقق، المساحات والأثمنة</span></div></li>
+        <li><span class="ic o"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span><div><b>تأكيد الانخراط</b><span>وتحجز بلاصتك فالمشروع</span></div></li>
+      </ol>
+    </div>
+
+    <div class="brush">سجّل دابا · بلاصتك فطنجة كتسناك</div>
+    <div class="foot"><span>سهلة</span><i>•</i><span>سريعة</span><i>•</i><span>معلوماتك سرية</span></div>
+  </header>
+
+  <form id="f" novalidate>
+    <h2 class="formhead">معلوماتك</h2>
+    <fieldset>
+      <label class="q" for="name">الاسم الكامل <span class="req">*</span></label>
+      <input id="name" name="name" type="text" autocomplete="name" placeholder="مثال: محمد العلمي" required>
+      <p class="err" id="e-name" hidden>عافاك كتب الاسم الكامل.</p>
+    </fieldset>
+
+    <fieldset>
+      <label class="q" for="phone">رقم الهاتف <span class="req">*</span></label>
+      <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" required>
+      <p class="hint">رقم مغربي، يفضل يكون فيه واتساب.</p>
+      <p class="err" id="e-phone" hidden>الرقم خاصو يبدا ب 05 أو 06 أو 07 (أو ‎+212) ويكون فيه 10 أرقام.</p>
+    </fieldset>
+
+    <fieldset>
+      <label class="q" for="age">السن <span class="req">*</span></label>
+      <input id="age" name="age" type="text" inputmode="numeric" maxlength="2" placeholder="مثال: 35" required style="max-width:180px">
+      <p class="err" id="e-age" hidden>كتب السن بالأرقام (من 18 حتى 99).</p>
+    </fieldset>
+
+    <fieldset>
+      <label class="q" for="job">الوظيفة / المهنة <span class="req">*</span></label>
+      <input id="job" name="job" type="text" autocomplete="organization-title" placeholder="مثال: أستاذ، تاجر، مهندس، موظف فالقطاع الخاص" required>
+      <p class="err" id="e-job" hidden>عافاك كتب الوظيفة أو المهنة.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend class="q">الحالة العائلية <span class="req">*</span></legend>
+      <div class="chips" id="marital">
+        <label class="chip"><input type="radio" name="marital" id="m1" value="أعزب / عزباء"><span>أعزب / عزباء</span></label>
+        <label class="chip"><input type="radio" name="marital" id="m2" value="متزوج(ة)"><span>متزوج(ة)</span></label>
+        <label class="chip"><input type="radio" name="marital" id="m3" value="مطلق(ة)"><span>مطلق(ة)</span></label>
+        <label class="chip"><input type="radio" name="marital" id="m4" value="أرمل(ة)"><span>أرمل(ة)</span></label>
+      </div>
+      <p class="err" id="e-marital" hidden>اختار الحالة العائلية.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend class="q">المساحة المرغوب فيها <span class="req">*</span></legend>
+      <div class="chips">
+        <label class="chip"><input type="radio" name="area" id="a1" value="60 – 70 م²"><span>60 – 70 م²</span></label>
+        <label class="chip"><input type="radio" name="area" id="a2" value="70 – 80 م²"><span>70 – 80 م²</span></label>
+        <label class="chip"><input type="radio" name="area" id="a3" value="90 – 100 م²"><span>90 – 100 م²</span></label>
+      </div>
+      <p class="err" id="e-area" hidden>اختار المساحة اللي بغيتي.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend class="q">الإمكانية المادية للتسبيق <span class="req">*</span></legend>
+      <div class="money">
+        <label class="chip"><input type="radio" name="capacity" id="c1" value="200000"><span><b>200,000</b><small>درهم</small></span></label>
+        <label class="chip"><input type="radio" name="capacity" id="c2" value="300000"><span><b>300,000</b><small>درهم</small></span></label>
+      </div>
+      <p class="err" id="e-capacity" hidden>اختار المبلغ اللي تقدر تسبق.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend class="q">التقييم: شحال مهتم بالمشروع؟ <span class="req">*</span></legend>
+      <div class="actions">
+        <div class="stars" id="stars" role="radiogroup" aria-label="درجة الاهتمام من 1 حتى 5"></div>
+        <span class="starlabel" id="starlabel">اختار من 1 حتى 5</span>
+      </div>
+      <p class="err" id="e-rating" hidden>عطي تقييم من 1 حتى 5.</p>
+    </fieldset>
+
+    <fieldset>
+      <label class="q" for="notes">ملاحظة <span class="hint" style="margin:0">(اختياري)</span></label>
+      <textarea id="notes" name="notes" placeholder="إلا عندك شي سؤال أو طلب خاص، كتبو هنا."></textarea>
+    </fieldset>
+
+    <div class="actions">
+      <button class="primary" type="submit" id="submit">إرسال الطلب</button>
+      <span class="hint" id="status" style="margin:0"></span>
+    </div>
+  </form>
+
+  <section class="panel done" id="done" hidden>
+    <h2 id="doneTitle">توصلنا بالطلب ديالك، شكراً!</h2>
+    <p id="doneText" style="margin:0">غادي نتاصلو بيك فأقرب وقت على الرقم اللي عطيتي.</p>
+    <pre class="summary" id="summary" hidden></pre>
+    <div class="actions">
+      <button class="ghost" type="button" id="copyBtn" hidden>نسخ الملخص</button>
+      <button class="ghost" type="button" id="againBtn" hidden>عاود المحاولة</button>
+    </div>
+  </section>
+
+
+  <footer>© 2026 طنجة غرين ريزيدنس · المعلومات كتبقى سرية وكتستعمل غير للتواصل بخصوص المشروع</footer>
+</div>
+
+<script>
+(function(){
+  const SUPABASE_URL = "https://ieziyzixlstcpsavlktv.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_1ZTzFkazDseg7bUxqpCFew_XQ5QNMpP";
+  const $ = id => document.getElementById(id);
+  const labels = ["","ضعيف","متوسط","مهتم","مهتم بزاف","جاهز للانخراط"];
+  let rating = 0;
+
+  const starsBox = $("stars");
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "star"; b.id = "star" + i;
+    b.setAttribute("role","radio"); b.setAttribute("aria-label", i + " / 5");
+    b.textContent = "★";
+    b.addEventListener("click", () => { rating = i; paintStars(); $("e-rating").hidden = true; });
+    starsBox.appendChild(b);
+  }
+  function paintStars(){
+    for (let i = 1; i <= 5; i++) {
+      const b = $("star"+i); b.classList.toggle("on", i <= rating);
+      b.setAttribute("aria-checked", String(i === rating));
+    }
+    $("starlabel").textContent = rating ? rating + "/5 · " + labels[rating] : "اختار من 1 حتى 5";
+  }
+
+  const radio = n => (document.querySelector('input[name="'+n+'"]:checked')||{}).value || "";
+  const toLatin = s => s.replace(/[٠-٩]/g, c => String(c.charCodeAt(0) - 1632));
+  const normPhone = p => toLatin(p).replace(/[\s.\-]/g,"").replace(/^00212/,"+212");
+  const phoneOk = p => /^(0[5-7]\d{8}|\+212[5-7]\d{8})$/.test(p);
+  const fmtMoney = v => Number(v).toLocaleString("en-US") + " درهم";
+
+  function collect(){
+    return {
+      name: $("name").value.trim(),
+      phone: normPhone($("phone").value.trim()),
+      age: Number(toLatin($("age").value || "").replace(/\D/g, "")) || 0,
+      job: $("job").value.trim(),
+      marital: radio("marital"),
+      area: radio("area"),
+      capacity: Number(radio("capacity")) || 0,
+      rating,
+      notes: $("notes").value.trim()
+    };
+  }
+  function validate(d){
+    const bad = {
+      name: d.name.length < 3,
+      phone: !phoneOk(d.phone),
+      age: !(d.age >= 18 && d.age <= 99),
+      job: d.job.length < 2,
+      marital: !d.marital, area: !d.area, capacity: !d.capacity, rating: !d.rating
+    };
+    let first = null;
+    for (const k in bad) { $("e-"+k).hidden = !bad[k]; if (bad[k] && !first) first = k; }
+    if (first) {
+      const el = first === "rating" ? $("star1") : (document.getElementById(first) || document.querySelector('input[name="'+first+'"]'));
+      el && el.focus();
+    }
+    return !first;
+  }
+  function summaryText(d){
+    return [
+      "طلب انخراط - طنجة غرين ريزيدنس",
+      "الاسم الكامل: " + d.name,
+      "الهاتف: " + d.phone,
+      "السن: " + d.age,
+      "الوظيفة: " + d.job,
+      "الحالة العائلية: " + d.marital,
+      "المساحة: " + d.area,
+      "التسبيق: " + fmtMoney(d.capacity),
+      "التقييم: " + d.rating + "/5 (" + labels[d.rating] + ")",
+      d.notes ? "ملاحظة: " + d.notes : ""
+    ].filter(Boolean).join("\n");
+  }
+
+  async function save(d){
+    const res = await fetch(SUPABASE_URL + "/rest/v1/tgr_applications", {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({
+        full_name: d.name, phone: d.phone, age: d.age, job: d.job,
+        marital_status: d.marital, desired_area: d.area, down_payment: d.capacity,
+        interest_rating: d.rating, notes: d.notes || null
+      })
+    });
+    if (res.status === 409) return "duplicate";
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return "ok";
+  }
+
+  $("f").addEventListener("submit", async e => {
+    e.preventDefault();
+    const d = collect();
+    if (!validate(d)) return;
+    $("submit").disabled = true; $("status").textContent = "كيتسجل…";
+    let saved = false;
+    try { await save(d); saved = true; } catch (err) { saved = false; }
+    $("status").textContent = ""; $("submit").disabled = false;
+    if (saved) { try { localStorage.setItem(FLAG, "1"); } catch(e) {} }
+    showDone(d, saved);
+  });
+
+  const FLAG = "tgr_submitted_v1";
+  function showThanks(){
+    $("f").hidden = true; $("done").hidden = false;
+    $("done").className = "panel done okstate";
+    $("doneTitle").textContent = "شكراً لكم";
+    $("doneText").textContent = "لقد تم التوصل برسالتكم، وسنتصل بكم لاحقاً بعد دراستها.";
+    $("summary").hidden = true; $("copyBtn").hidden = true; $("againBtn").hidden = true;
+  }
+  try { if (localStorage.getItem(FLAG)) showThanks(); } catch(e) {}
+  function showDone(d, saved){
+    $("f").hidden = true; $("done").hidden = false;
+    if (saved) {
+      showThanks();
+    } else {
+      $("done").className = "panel done failstate";
+      $("againBtn").hidden = false;
+      $("doneTitle").textContent = "وقع مشكل فالإرسال";
+      $("doneText").textContent = "ما قدرناش نسجلو الطلب دابا. تأكد من الأنترنيت وعاود ضغط على \"عاود المحاولة\"، ولا نسخ الملخص وصيفطو لينا.";
+      $("summary").textContent = summaryText(d);
+      $("summary").hidden = false; $("copyBtn").hidden = false;
+    }
+    $("done").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+  $("copyBtn").addEventListener("click", () => {
+    const t = $("summary").textContent;
+    const sel = () => { const r = document.createRange(); r.selectNodeContents($("summary")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+    try { navigator.clipboard.writeText(t).then(() => { $("copyBtn").textContent = "تنسخ ✓"; }, sel); } catch(e){ sel(); }
+  });
+  $("againBtn").addEventListener("click", () => {
+    $("done").hidden = true; $("f").hidden = false; $("copyBtn").textContent = "نسخ الملخص";
+    $("submit").focus();
+  });
+})();
+</script>
+</body>
+</html>
