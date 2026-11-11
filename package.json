@@ -1,0 +1,22 @@
+{
+  "name": "regam-live",
+  "version": "0.1.0",
+  "description": "REGAM Live - live broadcast with chat, screen share and guests",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/e2e.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "hls.js": "^1.7.4",
+    "ws": "^8.22.2"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,7 @@
+node_modules/
+data/
+.env
+.mode
+test/out/
+deploy/mediamtx.yml
+deploy/Caddyfile
